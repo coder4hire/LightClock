@@ -13,6 +13,8 @@
 
 #include "DFRobotDFPlayerMini.h"
 
+#define _DEBUG
+
 void DFRobotDFPlayerMini::setTimeOut(unsigned long timeOutDuration){
   _timeOutDuration = timeOutDuration;
 }

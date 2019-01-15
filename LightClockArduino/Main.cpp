@@ -2,12 +2,15 @@
 
 #include "DFRobotDFPlayerMini.h"
 
+CMain CMain::Inst;
+
 CMain::CMain():
 	softwareSerialPort(3, 4), // RX, TX
 	BTSerial(PIN_A3,2) // RX | TX
 {
 	c1 = 0;
 	c2 = 0;
+	btCmdBufLength = 0;
 }
 
 
@@ -21,6 +24,7 @@ void CMain::Setup()
 	BTSerial.begin(9600);
 	softwareSerialPort.begin(9600);
 	
+	dfPlayer.setTimeOut(1000);
 	int retries = 10;
 	while (!dfPlayer.begin(softwareSerialPort,true,retries==10) && retries--)
 	{  
@@ -28,16 +32,25 @@ void CMain::Setup()
 	}
 
 
-	dfPlayer.volume(5);
+	dfPlayer.volume(2);
 	dfPlayer.play();
 	Serial.print("Vol: ");
 	Serial.println(dfPlayer.readVolume());
+	softwareSerialPort.listen();
+	Serial.print("Vol: ");
+	Serial.println(dfPlayer.readVolume());
+	Serial.print("Track: ");
+	Serial.println(dfPlayer.readCurrentFileNumber());
 
 	//--- Pins initialization
 	pinMode(PIN_RED, OUTPUT);
 	pinMode(PIN_GREEN, OUTPUT);
 	pinMode(PIN_BLUE, OUTPUT);
 	pinMode(PIN_WHITE, OUTPUT);
+
+	//Now listening for bluetooth
+	BTSerial.attachInterrupt(handleBTChar);
+	BTSerial.listen();
 }
 
 int counter = 0;
@@ -53,48 +66,104 @@ void CMain::Loop()
 	analogWrite(PIN_WHITE, c2);
 
 	String str;
-	BTSerial.listen();
-	if (BTSerial.available())
+	
+	if (ReadBTCommand())
 	{
-		while (BTSerial.available())
-		{
-			int ch = BTSerial.read();
-			str += (char)ch;
-		}
-		Serial.write(str.c_str());
+		Serial.write((char*)rcvdCmd);
 		Serial.println();
+		
+		str = (char*)rcvdCmd;
 
-		if (str == "next")
+		if (str == "next!")
 		{
 			softwareSerialPort.listen();
-			delay(10);
 			dfPlayer.next();
+			delay(20);
+			int fileNum = dfPlayer.readCurrentFileNumber();
+			
+			BTSerial.listen();
 			BTSerial.print("File: ");
-			BTSerial.println(dfPlayer.readCurrentFileNumber());
+			BTSerial.print(fileNum);
+			BTSerial.println();
+			BTSerial.flush();
+
 		}
-		if (str == "up")
+		if (str == "up!")
 		{
 			softwareSerialPort.listen();
-			delay(10);
-			dfPlayer.volumeUp();
+			//dfPlayer.volumeUp();
+			int vol = dfPlayer.readVolume();
+
+			BTSerial.listen();
 			BTSerial.print("Vol: ");
-			BTSerial.println(dfPlayer.readVolume());
+			BTSerial.println(vol);
+			BTSerial.flush();
 		}
-		if (str == "down")
+		if (str == "down!")
 		{
 			softwareSerialPort.listen();
-			delay(10);
 			dfPlayer.volumeDown();
+			int vol = dfPlayer.readVolume();
+
+			BTSerial.listen();
 			BTSerial.print("Vol: ");
-			BTSerial.println(dfPlayer.readVolume());
+			BTSerial.println(vol);
+			BTSerial.flush();
 		}
 	}
-	BTSerial.listen();
-	//if (counter++ > 1000)
+	//if (counter++ > 500)
 	//{
 	//	BTSerial.write("Test!\r\n");
 	//	counter = 0;
 	//}
 
 	delay(10);
+}
+
+void CMain::handleBTChar(uint8_t c)
+{
+	CMain::Inst.OnBTCharReceived(c);
+}
+
+void CMain::OnBTCharReceived(uint8_t c)
+{
+	if (IsBTCommandComplete())
+	{
+		// If command is complete, just skip all other symbols until we confirm receive and clean up teh buffer;
+		return;
+	}
+	if (btCmdBufLength >= CMD_MAX_SIZE)
+	{
+		btCmdBufLength = 0;
+	}
+
+	// TODO: add check for start sequence
+	// Filling in buffer;
+	btCmdBuffer[btCmdBufLength] = c;
+	btCmdBufLength++;
+
+}
+
+bool CMain::IsBTCommandComplete()
+{
+	//TODO: change command completed condition (by length or EOL symbol ?)
+	return btCmdBufLength && btCmdBuffer[btCmdBufLength - 1] == '!';
+}
+
+bool CMain::ReadBTCommand()
+{
+	if (!IsBTCommandComplete())
+	{
+		return false;
+	}
+	else
+	{
+		memcpy(rcvdCmd, btCmdBuffer, btCmdBufLength);
+		
+		//TODO: remove this after changing logic to defined-length packets
+		rcvdCmd[btCmdBufLength] = 0;
+
+		btCmdBufLength=0;
+		return true;
+	}
 }
