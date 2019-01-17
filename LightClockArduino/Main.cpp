@@ -1,8 +1,11 @@
 #include "Main.h"
 
+#include "IRControl.h"
 #include "DFRobotDFPlayerMini.h"
 
 CMain CMain::Inst;
+
+#define BUTTON_PIN 7
 
 CMain::CMain():
 	softwareSerialPort(3, 4), // RX, TX
@@ -48,9 +51,13 @@ void CMain::Setup()
 	pinMode(PIN_BLUE, OUTPUT);
 	pinMode(PIN_WHITE, OUTPUT);
 
+	pinMode(BUTTON_PIN, INPUT_PULLUP);
+
 	//Now listening for bluetooth
 	BTSerial.attachInterrupt(handleBTChar);
 	BTSerial.listen();
+
+	IRControl::Inst.Begin();
 }
 
 int counter = 0;
@@ -74,7 +81,7 @@ void CMain::Loop()
 		
 		str = (char*)rcvdCmd;
 
-		if (str == "next!")
+		if (str == F("next!"))
 		{
 			softwareSerialPort.listen();
 			dfPlayer.next();
@@ -88,7 +95,7 @@ void CMain::Loop()
 			BTSerial.flush();
 
 		}
-		if (str == "up!")
+		if (str == F("up!"))
 		{
 			softwareSerialPort.listen();
 			//dfPlayer.volumeUp();
@@ -99,7 +106,7 @@ void CMain::Loop()
 			BTSerial.println(vol);
 			BTSerial.flush();
 		}
-		if (str == "down!")
+		if (str == F("down!"))
 		{
 			softwareSerialPort.listen();
 			dfPlayer.volumeDown();
@@ -111,12 +118,18 @@ void CMain::Loop()
 			BTSerial.flush();
 		}
 	}
-	//if (counter++ > 500)
-	//{
-	//	BTSerial.write("Test!\r\n");
-	//	counter = 0;
-	//}
 
+	//if (CheckButtonStatus())
+	//{
+	//	Serial.println(F("Button is pressed"));
+	//}
+	if (counter++ > 500)
+	{
+	//	BTSerial.write("Test!\r\n");
+		counter = 0;
+		Serial.print(".");
+	}
+	IRControl::Inst.DecodeData();
 	delay(10);
 }
 
@@ -166,4 +179,9 @@ bool CMain::ReadBTCommand()
 		btCmdBufLength=0;
 		return true;
 	}
+}
+
+bool CMain::CheckButtonStatus()
+{
+	return !digitalRead(BUTTON_PIN);
 }

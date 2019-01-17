@@ -41,6 +41,8 @@ protected:
 	bool IsBTCommandComplete();
 	bool ReadBTCommand();
 
+	bool CheckButtonStatus();
+
 	unsigned char c1;
 	unsigned char c2;
 };
