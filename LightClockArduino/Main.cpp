@@ -2,6 +2,7 @@
 
 #include "IRControl.h"
 #include "DFRobotDFPlayerMini.h"
+#include "RGBControl.h"
 
 CMain CMain::Inst;
 
@@ -11,8 +12,6 @@ CMain::CMain():
 	softwareSerialPort(3, 4), // RX, TX
 	BTSerial(PIN_A3,2) // RX | TX
 {
-	c1 = 0;
-	c2 = 0;
 	btCmdBufLength = 0;
 }
 
@@ -26,11 +25,11 @@ void CMain::Setup()
 	Serial.begin(115200);
 	BTSerial.begin(9600);
 	softwareSerialPort.begin(9600);
-	
+
 	dfPlayer.setTimeOut(1000);
 	int retries = 10;
-	while (!dfPlayer.begin(softwareSerialPort,true,retries==10) && retries--)
-	{  
+	while (!dfPlayer.begin(softwareSerialPort, true, retries == 10) && retries--)
+	{
 		TRACE(F("Unable to connect to DFPlayer"));
 	}
 
@@ -45,12 +44,6 @@ void CMain::Setup()
 	Serial.print("Track: ");
 	Serial.println(dfPlayer.readCurrentFileNumber());
 
-	//--- Pins initialization
-	pinMode(PIN_RED, OUTPUT);
-	pinMode(PIN_GREEN, OUTPUT);
-	pinMode(PIN_BLUE, OUTPUT);
-	pinMode(PIN_WHITE, OUTPUT);
-
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
 	//Now listening for bluetooth
@@ -58,20 +51,21 @@ void CMain::Setup()
 	BTSerial.listen();
 
 	IRControl::Inst.Begin();
+	CRGBControl::Inst.Init();
+
+	br = c = 0;
+
+	Serial.println("Regs");
+	Serial.println(TCCR0A,16);
+	Serial.println(TCCR0B, 16);
+	Serial.println(TCCR1A, 16);
+	Serial.println(TCCR1B, 16);
 }
 
 int counter = 0;
 
 void CMain::Loop()
 {
-	c1++;
-	c2 += 3;
-
-	analogWrite(PIN_RED, c1);
-	analogWrite(PIN_GREEN, c2);
-	analogWrite(PIN_BLUE, c1);
-	analogWrite(PIN_WHITE, c2);
-
 	String str;
 	
 	if (ReadBTCommand())
@@ -129,7 +123,41 @@ void CMain::Loop()
 		counter = 0;
 		Serial.print(".");
 	}
-	IRControl::Inst.DecodeData();
+	unsigned long code = IRControl::Inst.DecodeData();
+	if (code)
+	{
+		Serial.print("IR: ");
+		Serial.println(code,16);
+	}
+	if (code == 0xF807FF00)
+	{
+		softwareSerialPort.listen();
+		dfPlayer.next();
+		BTSerial.listen();
+	}
+	if (code == 0xF906FF00)
+	{
+		softwareSerialPort.listen();
+		dfPlayer.previous();
+		BTSerial.listen();
+	}
+
+	c++;
+	if (!c)
+	{
+		br = (br + 1) % 4;
+	}
+
+	unsigned long val = ((unsigned long)c) << (br * 8);
+//	RGBW val;
+//	val.R = 1;
+//	val.W = 1;
+//	Serial.println(val,16);
+//	RGBW val;
+//	val.R = 1;
+//	val.B = 128;
+	CRGBControl::Inst.SetRGBW(val);
+
 	delay(10);
 }
 

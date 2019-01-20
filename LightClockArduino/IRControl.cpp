@@ -5,9 +5,8 @@ IRControl IRControl::Inst;
 
 IRControl::IRControl()
 {
-	pinMode(PIN_A0, INPUT);
-	bufSizeInBits = 0;
-	highCounter = 0;
+	pinMode(PIN_A0, INPUT_PULLUP);
+	bitNum = -1;
 	isFinished = false;
 }
 
@@ -27,81 +26,103 @@ void IRControl::SetupTimerInterrupt()
 
 	// initialize timer1 
 	noInterrupts();           // disable all interrupts
-	TCCR1A = 0;
-	TCCR1B = 0;
+	TCCR2A = 0;
+	TCCR2B = 0;
 
-	TCNT1 = (65536-3200);            // preload timer 65536 - for 0.2ms interval
-	TCCR1B |= (1 << CS10);    // 1 prescaler 
-	TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+	TCNT2 = (255-12);            // preload timer 65536 - for 0.2ms interval
+	TCCR2B |= (1 << CS22) | (1 << CS21);    // 1/256 prescaler 
+	TIMSK2 |= (1 << TOIE2);   // enable timer overflow interrupt
 	interrupts();             // enable all interrupts
 }
 
 void IRControl::StartReading()
 {
-	highCounter = 0;
-	bufSizeInBits = 0;
+	prevVal = 1;
+	prevPeriodCounter = 0;
+	counter = 0;
+	bitNum = -1;
+	code = 0;
 	isFinished = false;
-	Serial.println(F("IR Start"));
+	//Serial.println(F("IR Start"));
 }
 
-int IRControl::DecodeData()
+unsigned long IRControl::DecodeData()
 {
+	if(isFinished)
+	{
+		unsigned long retVal = code;
+		StartReading();
+		return retVal;
+	}
+	return 0;
+}
+
+ISR(TIMER2_OVF_vect)        // interrupt service routine that wraps a user defined function supplied by attachInterrupt
+{
+	IRControl::Inst.OnInt();
+}
+
+void IRControl::OnInt()
+{
+	TCNT2 = (255 - 12);            // preload timer
 	if (isFinished)
 	{
-		for (int i = 0; i < bufSizeInBits / 8; i++)
-		{
-			Serial.print(buff[i]);
-			Serial.print(" ");
-		}
-		Serial.println("");
-		StartReading();
-	}
-}
-
-ISR(TIMER1_OVF_vect)        // interrupt service routine that wraps a user defined function supplied by attachInterrupt
-{
-	//cli();
-	TCNT1 = (65536 - 3200);            // preload timer
-	if (IRControl::Inst.isFinished)
-	{
-		return;
-	}
-
-	if (IRControl::Inst.bufSizeInBits == IR_BUF_SIZE * 8)
-	{
-		IRControl::Inst.isFinished = true;
 		return;
 	}
 
 	unsigned char val = PINC & 1; // Bit0 corresponds to PIN_A0
-	//unsigned char val = digitalRead(PIN_A0);
-	if (val && IRControl::Inst.bufSizeInBits == 0)
+	if (counter > END_TIMEOUT)
 	{
-		return;
-	}
-
-	// Storing data into buffer
-	int bitNum = IRControl::Inst.bufSizeInBits & 0x7;
-	int byteNum = IRControl::Inst.bufSizeInBits >> 3;
-	if (!bitNum)
-	{
-		IRControl::Inst.buff[byteNum] = 0;
-	}
-	IRControl::Inst.buff[byteNum] |= (val << bitNum);
-	IRControl::Inst.bufSizeInBits++;
-
-	// Checking for timeouts
-	if(val)
-	{
-		IRControl::Inst.highCounter++;
-		if (IRControl::Inst.highCounter > END_TIMEOUT)
+		if (bitNum >= 0)
 		{
-			IRControl::Inst.isFinished = true;
+			isFinished = true;
+			return;
 		}
 	}
 	else
 	{
-		IRControl::Inst.highCounter = 0;
+		counter++;
 	}
-	//sei();
+
+
+	if (val != prevVal)
+	{
+		if (bitNum == -1)
+		{
+			// Looking for start bit
+			if (prevVal == 1 && prevPeriodCounter >= 20 )
+			{
+				bitNum = 0;
+			}
+		}
+		else
+		{
+			if (prevVal == 1)
+			{
+				if (prevPeriodCounter >= 3 && prevPeriodCounter < 9 &&	// low half of bit sequence
+					counter >= 2 && counter < 15)						// high half of bit sequence
+				{
+					if (counter >= 7)
+					{
+						// This is "1" bit
+						code = code | (1L << bitNum);
+					}
+					bitNum++;
+					if (bitNum >= sizeof(code) * 8)
+					{
+						isFinished = true;
+						return;
+					}
+				}
+				else
+				{
+					StartReading(); // Error, restart reading
+				}
+			}
+		}
+
+		prevVal = val;
+		prevPeriodCounter = counter;
+		counter = 0;
+	}
 }

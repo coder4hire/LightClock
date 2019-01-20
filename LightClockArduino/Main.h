@@ -8,14 +8,6 @@
 
 #define CMD_MAX_SIZE 128
 
-enum PINS
-{
-	PIN_RED = 5,
-	PIN_GREEN = 6,
-	PIN_BLUE = 9,
-	PIN_WHITE = 10
-};
-
 class CMain
 {
 public:
@@ -26,6 +18,8 @@ public:
 	void Loop();
 
 protected:
+	unsigned char br;
+	unsigned char c;
 	CMain();
 
 	NeoSWSerial softwareSerialPort;
@@ -42,8 +36,5 @@ protected:
 	bool ReadBTCommand();
 
 	bool CheckButtonStatus();
-
-	unsigned char c1;
-	unsigned char c2;
 };
 
