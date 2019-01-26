@@ -1,8 +1,10 @@
 package com.lightclockcontrol.gss;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -82,10 +84,25 @@ public class AlarmsFragment extends Fragment {
         adapter = new ScheduleViewAdapter(items, new ScheduleViewAdapter.OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(ScheduleViewAdapter.ScheduleItem item) {
+                Intent i = new Intent(getActivity().getBaseContext(), ScheduleItemEditor.class);
+                i.putExtra("EditingItem", item);
+                startActivityForResult(i,0);
             }
         });
         scheduleList.setAdapter(adapter);
 
         return view;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode==1)
+        {
+            Parcelable parcel = data.getExtras().getParcelable("ResultItem");
+            if(parcel!=null) {
+                adapter.UpdateScheduleItem((ScheduleViewAdapter.ScheduleItem) parcel);
+            }
+        }
     }
 }

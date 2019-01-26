@@ -13,6 +13,17 @@ public enum EffectType {
         this.description = description;
     }
 
-    int getValue(){return value;}
+    public static EffectType fromValue(int val)
+    {
+        for (EffectType v:values())
+        {
+            if(v.value==val)
+            {
+                return v;
+            }
+        }
+        return None;
+    }
 
+    public int getValue(){return value;}
 }
