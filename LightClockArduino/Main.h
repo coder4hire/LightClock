@@ -2,6 +2,7 @@
 
 #include "NeoSWSerial.h"
 #include "DFRobotDFPlayerMini.h"
+#include "RTClib.h"
 
 #define DFPLAYER_RECONNECT_INTERVAL 500
 #define TRACE(x) Serial.println(x);
@@ -13,6 +14,7 @@ class CMain
 public:
 	~CMain();
 	static CMain Inst;
+	RTC_DS1307 RTC;
 
 	void Setup();
 	void Loop();

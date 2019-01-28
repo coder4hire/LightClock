@@ -3,10 +3,13 @@
 #include "IRControl.h"
 #include "DFRobotDFPlayerMini.h"
 #include "RGBControl.h"
+#include "Wire.h"
 
 CMain CMain::Inst;
 
-#define BUTTON_PIN 7
+// NOTE: If you use original schematics, this pin should be D7
+// But my Nano has this pin broken, so it is rewired to D12
+#define BUTTON_PIN 12
 
 CMain::CMain():
 	softwareSerialPort(3, 4), // RX, TX
@@ -25,14 +28,26 @@ void CMain::Setup()
 	Serial.begin(115200);
 	BTSerial.begin(9600);
 	softwareSerialPort.begin(9600);
+	Wire.begin();
 
-	dfPlayer.setTimeOut(1000);
+	// Set up RTC clock
+	RTC.begin();
+	if (!RTC.isrunning()) {
+		Serial.println("RTC is NOT running!");
+		RTC.adjust(DateTime(__DATE__, __TIME__));
+	}
+	else
+	{
+		Serial.println("RTC is running!");
+	}
+
+	//Set up DFPlayer
+	//dfPlayer.setTimeOut(1000);
 	int retries = 10;
 	while (!dfPlayer.begin(softwareSerialPort, true, retries == 10) && retries--)
 	{
 		TRACE(F("Unable to connect to DFPlayer"));
 	}
-
 
 	dfPlayer.volume(2);
 	dfPlayer.play();
@@ -60,6 +75,14 @@ void CMain::Setup()
 	Serial.println(TCCR0B, 16);
 	Serial.println(TCCR1A, 16);
 	Serial.println(TCCR1B, 16);
+
+	Serial.print("RTC:");
+	Serial.print(RTC.now().hour());
+	Serial.print(":");
+	Serial.print(RTC.now().minute());
+	Serial.print(":");
+	Serial.print(RTC.now().second());
+	Serial.println(":");
 }
 
 int counter = 0;
@@ -113,10 +136,17 @@ void CMain::Loop()
 		}
 	}
 
-	//if (CheckButtonStatus())
-	//{
-	//	Serial.println(F("Button is pressed"));
-	//}
+	if (CheckButtonStatus())
+	{
+		Serial.println(F("Button is pressed"));
+		c = 255;
+
+		softwareSerialPort.listen();
+		dfPlayer.next();
+		BTSerial.listen();
+
+		Serial.println(RTC.isrunning());
+	}
 	if (counter++ > 500)
 	{
 	//	BTSerial.write("Test!\r\n");
@@ -211,5 +241,6 @@ bool CMain::ReadBTCommand()
 
 bool CMain::CheckButtonStatus()
 {
+	pinMode(7, INPUT);
 	return !digitalRead(BUTTON_PIN);
 }
