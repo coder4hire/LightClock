@@ -1,5 +1,6 @@
 package com.lightclockcontrol.gss;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import com.lightclockcontrol.gss.dummy.DummyContent;
 
 import java.util.ArrayList;
+import app.akexorcist.bluetoothspp.ListenerActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
                     mgr.beginTransaction().replace(R.id.fragmentContent,manualFragment).commit();
                     return true;
                 case R.id.navigation_settings:
+                    Intent i = new Intent(getBaseContext(), ListenerActivity.class);
+                    startActivity(i);
                     return true;
             }
             return false;

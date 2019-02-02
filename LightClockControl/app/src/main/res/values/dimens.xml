@@ -4,4 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="text_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="bluetooth_spp_text_size">18sp</dimen>
+    <dimen name="bluetooth_spp_padding">5dp</dimen>
 </resources>
