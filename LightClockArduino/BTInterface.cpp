@@ -1,7 +1,11 @@
 #include "BTInterface.h"
 
+/* RFC1952  - 0x04C11DB7 (as in Java) */
+/* Here it is in reverced bit order */
+#define POLY 0x76DC4190
+
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
-#define POLY 0x82f63b78
+//#define POLY 0x82f63b78
 
 /* CRC-32 (Ethernet, ZIP, etc.) polynomial in reversed bit order. */
 /* #define POLY 0xedb88320 */
