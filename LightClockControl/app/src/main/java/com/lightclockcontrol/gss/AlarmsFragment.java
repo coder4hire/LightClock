@@ -77,7 +77,7 @@ public class AlarmsFragment extends Fragment {
         layoutManager = new LinearLayoutManager(this.getContext());
         scheduleList.setLayoutManager(layoutManager);
         ArrayList<ScheduleViewAdapter.ScheduleItem> items = new ArrayList<>();
-        for (int i = 0; i < ALARMS_NUM; i++) {
+        for (byte i = 0; i < ALARMS_NUM; i++) {
             items.add(new ScheduleViewAdapter.ScheduleItem(i));
         }
 

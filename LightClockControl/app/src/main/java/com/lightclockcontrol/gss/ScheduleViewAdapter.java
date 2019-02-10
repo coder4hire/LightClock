@@ -101,7 +101,7 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
     }
 
     public static class ScheduleItem implements Parcelable {
-        public final int id;
+        public final byte id;
         public boolean isEnabled;
         public Time execTime = new Time(0);
         public EffectType effectType = EffectType.None;
@@ -111,12 +111,12 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
         public int musicEnabledTime=120;
         public byte dayOfWeekMask = 0;
 
-        public ScheduleItem(int id) {
+        public ScheduleItem(byte id) {
             this.id = id;
         }
 
         protected ScheduleItem(Parcel in) {
-            id = in.readInt();
+            id = in.readByte();
             isEnabled = in.readByte() != 0;
             execTime = new Time(in.readLong());
             effectType = EffectType.fromValue(in.readInt());
@@ -152,7 +152,7 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeInt(id);
+            dest.writeByte(id);
             dest.writeByte(isEnabled ? (byte)1 : (byte)0);
             dest.writeLong(execTime.getTime());
             dest.writeInt(effectType.getValue());
