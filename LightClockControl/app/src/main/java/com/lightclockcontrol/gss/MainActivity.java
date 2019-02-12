@@ -19,8 +19,8 @@ import app.akexorcist.bluetoothspp.ListenerActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    Fragment alarmsFragment = new AlarmsFragment();
-    Fragment manualFragment = new ManualFragment();
+    private Fragment alarmsFragment = new AlarmsFragment();
+    private Fragment manualFragment = new ManualFragment();
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -54,5 +54,4 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
-
 }

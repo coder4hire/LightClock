@@ -29,6 +29,9 @@ public class ScheduleItemEditor extends AppCompatActivity {
     CheckBox chkRnd;
     EditText edtSong;
     Spinner spinFolder;
+    EditText edtLightLength;
+    EditText edtSoundLength;
+    CheckBox[] chkWeekdays = new CheckBox[7];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +42,20 @@ public class ScheduleItemEditor extends AppCompatActivity {
 
         // Getting GUI objects
         spinVisualEffect = (Spinner) findViewById(R.id.spinVisualEffect);
-        spinFolder = (Spinner) findViewById(R.id.spinAudioFolder);
         timePicker = (TimePicker) findViewById(R.id.timePicker);
+        spinFolder = (Spinner) findViewById(R.id.spinAudioFolder);
         chkRnd = (CheckBox) findViewById(R.id.chkRnd);
         edtSong = (EditText) findViewById(R.id.txtSong);
+        edtLightLength = (EditText) findViewById(R.id.txtLightLength);
+        edtSoundLength = (EditText) findViewById(R.id.txtSoundLength);
+
+        chkWeekdays[0] = (CheckBox) findViewById(R.id.chkMon);
+        chkWeekdays[1] = (CheckBox) findViewById(R.id.chkTue);
+        chkWeekdays[2] = (CheckBox) findViewById(R.id.chkWed);
+        chkWeekdays[3] = (CheckBox) findViewById(R.id.chkThu);
+        chkWeekdays[4] = (CheckBox) findViewById(R.id.chkFri);
+        chkWeekdays[5] = (CheckBox) findViewById(R.id.chkSat);
+        chkWeekdays[6] = (CheckBox) findViewById(R.id.chkSun);
 
         // Filling in spinner values
         ArrayAdapter<String> spinnerAdapterEffects= new ArrayAdapter<String>(App.getContext(), android.R.layout.simple_spinner_dropdown_item);
@@ -66,6 +79,24 @@ public class ScheduleItemEditor extends AppCompatActivity {
             spinVisualEffect.setSelection(editingItem.effectType.getValue());
             timePicker.setCurrentHour(editingItem.execTime.getHours());
             timePicker.setCurrentMinute(editingItem.execTime.getMinutes());
+
+            spinFolder.setSelection(editingItem.folderID);
+            if(editingItem.songID!=255) {
+                chkRnd.setChecked(false);
+                edtSong.setText(Integer.toString(editingItem.songID));
+            }
+            else
+            {
+                chkRnd.setChecked(true);
+                edtSong.setText("0");
+            }
+            edtLightLength.setText(Integer.toString(editingItem.lightEnabledTime));
+            edtSoundLength.setText(Integer.toString(editingItem.soundEnabledTime));
+
+            for(int i=0;i<7;i++)
+            {
+                chkWeekdays[i].setChecked((editingItem.dayOfWeekMask&(1<<i))!=0);
+            }
         }
 
         // Adding event handlers
@@ -123,6 +154,19 @@ public class ScheduleItemEditor extends AppCompatActivity {
     }
 
     private boolean SaveDataToClock() {
+        editingItem.effectType = EffectType.fromValue((int)spinVisualEffect.getSelectedItemId());
+        editingItem.execTime.setTime(((long)timePicker.getCurrentHour())*3600000l+((long)timePicker.getCurrentMinute())*60000l);
+        editingItem.folderID= (byte)(spinFolder.getSelectedItemId());
+        editingItem.songID = (byte)Integer.parseInt(edtSong.getText().toString());
+        editingItem.lightEnabledTime = Integer.parseInt(edtLightLength.getText().toString());
+        editingItem.soundEnabledTime = Integer.parseInt(edtSoundLength.getText().toString());
+        editingItem.dayOfWeekMask=0;
+        for(int i=0;i<7;i++)
+        {
+            editingItem.dayOfWeekMask|=(chkWeekdays[i].isChecked() ? 1<<i : 0);
+        }
+
+        BTInterface.GetInstance().SendScheduleItemUpdate(editingItem);
 
 /*        editingItem.effectType = EffectType.fromValue((int)spinVisualEffect.getSelectedItemId());
         editingItem.execTime.setTime(((long)timePicker.getCurrentHour())*3600000l+((long)timePicker.getCurrentMinute())*60000l);
@@ -131,6 +175,6 @@ public class ScheduleItemEditor extends AppCompatActivity {
         intent.putExtra("ResultItem",editingItem);
         setResult(1,intent);*/
 
-            return false;
+        return false;
     }
 }

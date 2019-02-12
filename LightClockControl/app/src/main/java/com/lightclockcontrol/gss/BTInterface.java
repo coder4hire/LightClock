@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -24,8 +25,24 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
     BluetoothSPP bt;
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     BTPacketFactory packetFactory = new BTPacketFactory();
+    private boolean isWaitingForAck = false;
 
     int currentPacketID = 1;
+    static private BTInterface instance=null;
+
+    static public BTInterface GetInstance()
+    {
+        if(instance==null)
+        {
+           instance = new BTInterface();
+        }
+        return instance;
+    }
+
+    private BTInterface()
+    {
+        Begin(App.getContext());
+    }
 
     protected void Begin(Context ctx) {
         bt = new BluetoothSPP(ctx);
@@ -88,6 +105,8 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
                 bt.startService(BluetoothState.DEVICE_OTHER);
             }
         }
+
+        bt.autoConnect("LightClock");
     }
 
     public void close() throws Exception {
@@ -141,24 +160,55 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         }
     }
 
-    public boolean SendPacket(Byte[] data) {
+    public boolean SendPacket(byte[] data)
+    {
+        synchronized(this) {
+            bt.send( data,false);
+            isWaitingForAck=true;
+        }
         return true;
     }
 
     public boolean SendScheduleItemUpdate(ScheduleViewAdapter.ScheduleItem item)
     {
         UpdatePacketID();
-        if(SendPacket(packetFactory.CreateScheduleUpdatePacket(currentPacketID,item)))
+        SendPacket(packetFactory.CreateScheduleUpdatePacket(currentPacketID,item));
+
+        for(int i=0;i<10;i++)
         {
-            return false;
+            synchronized (this)
+            {
+                if(!isWaitingForAck)
+                {
+                    return true;
+                }
+            }
+
+            try {
+                Thread.sleep(1000);
+            }
+            catch(Exception e)
+            {
+            }
         }
 
         // TODO: Wait for response, repeat after timeout
-        return true;
+        return false;
     }
 
     @Override
     public void OnScheduleUpdate(List<ScheduleViewAdapter.ScheduleItem> scheduleItems) {
+        synchronized (this) {
+        }
+    }
 
+    @Override
+    public void OnAcknowledged(int packetID) {
+        synchronized (this) {
+            if(packetID==currentPacketID)
+            {
+                isWaitingForAck=false;
+            }
+        }
     }
 }

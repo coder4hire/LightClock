@@ -17,9 +17,6 @@ import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link AlarmsFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
  * Use the {@link AlarmsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
@@ -28,6 +25,8 @@ public class AlarmsFragment extends Fragment {
     private RecyclerView.LayoutManager layoutManager;
     ScheduleViewAdapter adapter;
     final int ALARMS_NUM = 10;
+
+    private ArrayList<ScheduleViewAdapter.ScheduleItem> scheduleItems = new ArrayList<>();
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -76,12 +75,12 @@ public class AlarmsFragment extends Fragment {
 
         layoutManager = new LinearLayoutManager(this.getContext());
         scheduleList.setLayoutManager(layoutManager);
-        ArrayList<ScheduleViewAdapter.ScheduleItem> items = new ArrayList<>();
+
         for (byte i = 0; i < ALARMS_NUM; i++) {
-            items.add(new ScheduleViewAdapter.ScheduleItem(i));
+            scheduleItems.add(new ScheduleViewAdapter.ScheduleItem(i));
         }
 
-        adapter = new ScheduleViewAdapter(items, new ScheduleViewAdapter.OnListFragmentInteractionListener() {
+        adapter = new ScheduleViewAdapter(scheduleItems, new ScheduleViewAdapter.OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(ScheduleViewAdapter.ScheduleItem item) {
                 Intent i = new Intent(getActivity().getBaseContext(), ScheduleItemEditor.class);
@@ -101,8 +100,15 @@ public class AlarmsFragment extends Fragment {
         {
             Parcelable parcel = data.getExtras().getParcelable("ResultItem");
             if(parcel!=null) {
-                adapter.UpdateScheduleItem((ScheduleViewAdapter.ScheduleItem) parcel);
+                UpdateSchedule((ArrayList<ScheduleViewAdapter.ScheduleItem> ) parcel);
             }
+        }
+    }
+
+    public void UpdateSchedule(ArrayList<ScheduleViewAdapter.ScheduleItem> newItems)
+    {
+        for(ScheduleViewAdapter.ScheduleItem item : newItems) {
+            adapter.UpdateScheduleItem(item);
         }
     }
 }

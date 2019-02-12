@@ -107,8 +107,8 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
         public EffectType effectType = EffectType.None;
         public byte folderID;
         public byte songID;
-        public int effectEnabledTime=600;
-        public int musicEnabledTime=120;
+        public int lightEnabledTime=600;
+        public int soundEnabledTime=120;
         public byte dayOfWeekMask = 0;
 
         public ScheduleItem(byte id) {
@@ -123,8 +123,8 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
             dayOfWeekMask = in.readByte();
             folderID = in.readByte();
             songID = in.readByte();
-            effectEnabledTime = in.readInt();
-            musicEnabledTime = in.readInt();
+            lightEnabledTime = in.readInt();
+            soundEnabledTime = in.readInt();
             dayOfWeekMask = in.readByte();
         }
 
@@ -159,8 +159,8 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
             dest.writeByte(dayOfWeekMask);
             dest.writeByte(folderID);
             dest.writeByte(songID);
-            dest.writeInt(effectEnabledTime);
-            dest.writeInt(musicEnabledTime);
+            dest.writeInt(lightEnabledTime);
+            dest.writeInt(soundEnabledTime);
             dest.writeByte(dayOfWeekMask);
         }
     }

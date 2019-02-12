@@ -1,9 +1,9 @@
 #include "Main.h"
 
-#include "IRControl.h"
 #include "DFRobotDFPlayerMini.h"
 #include "RGBControl.h"
 #include "Wire.h"
+#include "BTInterface.h"
 
 CMain CMain::Inst;
 
@@ -12,10 +12,8 @@ CMain CMain::Inst;
 #define BUTTON_PIN 12
 
 CMain::CMain():
-	softwareSerialPort(3, 4), // RX, TX
-	BTSerial(PIN_A3,2) // RX | TX
+	softwareSerialPort(3, 4) // RX, TX
 {
-	btCmdBufLength = 0;
 }
 
 
@@ -26,7 +24,6 @@ CMain::~CMain()
 void CMain::Setup()
 {
 	Serial.begin(115200);
-	BTSerial.begin(9600);
 	softwareSerialPort.begin(9600);
 	Wire.begin();
 
@@ -49,7 +46,16 @@ void CMain::Setup()
 		TRACE(F("Unable to connect to DFPlayer"));
 	}
 
-	dfPlayer.volume(2);
+	// Setting up button pin
+	pinMode(BUTTON_PIN, INPUT_PULLUP);
+
+	// Initializing other components
+	CBTInterface::Inst.Init();
+	IRControl::Inst.Begin();
+	CRGBControl::Inst.Init();
+
+
+	/*dfPlayer.volume(2);
 	dfPlayer.play();
 	Serial.print("Vol: ");
 	Serial.println(dfPlayer.readVolume());
@@ -58,15 +64,6 @@ void CMain::Setup()
 	Serial.println(dfPlayer.readVolume());
 	Serial.print("Track: ");
 	Serial.println(dfPlayer.readCurrentFileNumber());
-
-	pinMode(BUTTON_PIN, INPUT_PULLUP);
-
-	//Now listening for bluetooth
-	BTSerial.attachInterrupt(handleBTChar);
-	BTSerial.listen();
-
-	IRControl::Inst.Begin();
-	CRGBControl::Inst.Init();
 
 	br = c = 0;
 
@@ -82,31 +79,29 @@ void CMain::Setup()
 	Serial.print(RTC.now().minute());
 	Serial.print(":");
 	Serial.print(RTC.now().second());
-	Serial.println(":");
+	Serial.println(":"); */
 }
-
-int counter = 0;
 
 void CMain::Loop()
 {
 	String str;
 	
-	if (ReadBTCommand())
+	/*if (ReadBTCommand())
 	{
 		Serial.write((char*)rcvdCmd);
 		Serial.println();
 		
 		str = (char*)rcvdCmd;
 
-		if (str == F("next!"))
+		/ (str == F("next!"))
 		{
 			softwareSerialPort.listen();
 			dfPlayer.next();
 			delay(20);
 			int fileNum = dfPlayer.readCurrentFileNumber();
 			
-			BTSerial.listen();
-			BTSerial.print("File: ");
+			CBTInterface::Inst.Listen();
+			//BTSerial.print("File: ");
 			BTSerial.print(fileNum);
 			BTSerial.println();
 			BTSerial.flush();
@@ -115,10 +110,10 @@ void CMain::Loop()
 		if (str == F("up!"))
 		{
 			softwareSerialPort.listen();
-			//dfPlayer.volumeUp();
+			dfPlayer.volumeUp();
 			int vol = dfPlayer.readVolume();
 
-			BTSerial.listen();
+			CBTInterface::Inst.Listen();
 			BTSerial.print("Vol: ");
 			BTSerial.println(vol);
 			BTSerial.flush();
@@ -129,50 +124,28 @@ void CMain::Loop()
 			dfPlayer.volumeDown();
 			int vol = dfPlayer.readVolume();
 
-			BTSerial.listen();
+			CBTInterface::Inst.Listen();
 			BTSerial.print("Vol: ");
 			BTSerial.println(vol);
 			BTSerial.flush();
 		}
-	}
+	}*/
 
 	if (CheckButtonStatus())
 	{
-		Serial.println(F("Button is pressed"));
-		c = 255;
-
-		softwareSerialPort.listen();
-		dfPlayer.next();
-		BTSerial.listen();
-
-		Serial.println(RTC.isrunning());
-	}
-	if (counter++ > 500)
-	{
-	//	BTSerial.write("Test!\r\n");
-		counter = 0;
-		Serial.print(".");
-	}
-	unsigned long code = IRControl::Inst.DecodeData();
-	if (code)
-	{
-		Serial.print("IR: ");
-		Serial.println(code,16);
-	}
-	if (code == 0xF807FF00)
-	{
-		softwareSerialPort.listen();
-		dfPlayer.next();
-		BTSerial.listen();
-	}
-	if (code == 0xF906FF00)
-	{
-		softwareSerialPort.listen();
-		dfPlayer.previous();
-		BTSerial.listen();
+		OnButtonPressed();
 	}
 
-	c++;
+	// Check for remote control button pressed
+	IR_ACTIONS actionButton = IRControl::Inst.GetButtonPressed();
+	if (actionButton != IR_NONE)
+	{
+		OnIRButtonPressed(actionButton);
+	}
+
+	CBTInterface::Inst.ProcessBTCommands();
+
+/*	c++;
 	if (!c)
 	{
 		br = (br + 1) % 4;
@@ -186,61 +159,37 @@ void CMain::Loop()
 //	RGBW val;
 //	val.R = 1;
 //	val.B = 128;
-	CRGBControl::Inst.SetRGBW(val);
+	CRGBControl::Inst.SetRGBW(val);*/
 
 	delay(10);
-}
-
-void CMain::handleBTChar(uint8_t c)
-{
-	CMain::Inst.OnBTCharReceived(c);
-}
-
-void CMain::OnBTCharReceived(uint8_t c)
-{
-	if (IsBTCommandComplete())
-	{
-		// If command is complete, just skip all other symbols until we confirm receive and clean up teh buffer;
-		return;
-	}
-	if (btCmdBufLength >= CMD_MAX_SIZE)
-	{
-		btCmdBufLength = 0;
-	}
-
-	// TODO: add check for start sequence
-	// Filling in buffer;
-	btCmdBuffer[btCmdBufLength] = c;
-	btCmdBufLength++;
-
-}
-
-bool CMain::IsBTCommandComplete()
-{
-	//TODO: change command completed condition (by length or EOL symbol ?)
-	return btCmdBufLength && btCmdBuffer[btCmdBufLength - 1] == '!';
-}
-
-bool CMain::ReadBTCommand()
-{
-	if (!IsBTCommandComplete())
-	{
-		return false;
-	}
-	else
-	{
-		memcpy(rcvdCmd, btCmdBuffer, btCmdBufLength);
-		
-		//TODO: remove this after changing logic to defined-length packets
-		rcvdCmd[btCmdBufLength] = 0;
-
-		btCmdBufLength=0;
-		return true;
-	}
 }
 
 bool CMain::CheckButtonStatus()
 {
 	pinMode(7, INPUT);
 	return !digitalRead(BUTTON_PIN);
+}
+
+void CMain::OnButtonPressed()
+{
+	softwareSerialPort.listen();
+	dfPlayer.next();
+	CBTInterface::Inst.Listen();
+}
+
+void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)
+{
+	switch (actionButton)
+	{
+	case IR_LEFT:
+		softwareSerialPort.listen();
+		dfPlayer.next();
+		CBTInterface::Inst.Listen();
+		break;
+	case IR_RIGHT:
+		softwareSerialPort.listen();
+		dfPlayer.previous();
+		CBTInterface::Inst.Listen();
+		break;
+	}
 }

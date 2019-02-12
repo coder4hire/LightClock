@@ -77,15 +77,25 @@ public class BTPacketFactory {
     }
 
 
-    protected void WriteHeader(int packetID,PacketTypes packetеType) {
+    protected void WriteHeader(int packetID,PacketTypes packetType) {
         bytesArray.clear();
         WriteToArray(0xBEAF115E);// Preamble
         WriteToArray(packetID);
-        WriteToArray((short)packetеType.getValue());
+        WriteToArray((short)packetType.getValue());
         WriteToArray((short) 0); // length
     }
 
-    public Byte[] CreateScheduleUpdatePacket(int packetID, ScheduleViewAdapter.ScheduleItem item) {
+    protected byte[] Obj2BytesArray(Object[] objArr)
+    {
+        byte[] arr = new byte[objArr.length];
+        for(int i=0;i<objArr.length;i++)
+        {
+            arr[i]=(Byte)objArr[i];
+        }
+        return arr;
+    }
+
+    public byte[] CreateScheduleUpdatePacket(int packetID, ScheduleViewAdapter.ScheduleItem item) {
         WriteHeader(packetID,PacketTypes.ScheduleUpdate);
         WriteToArray(item.id); // Schedule item ID
         WriteToArray(item.isEnabled);
@@ -93,12 +103,12 @@ public class BTPacketFactory {
         WriteToArray((byte)item.effectType.getValue());
         WriteToArray(item.folderID);
         WriteToArray(item.songID);
-        WriteToArray(item.effectEnabledTime);
-        WriteToArray(item.musicEnabledTime);
+        WriteToArray(item.lightEnabledTime);
+        WriteToArray(item.soundEnabledTime);
         WriteToArray(item.dayOfWeekMask);
-        bytesArray.set(8, (byte) (bytesArray.size() - headerSize)); // Setting size, payload only
+        bytesArray.set(10, (byte) (bytesArray.size() - headerSize)); // Setting size, payload only
         WriteToArray(CalcCRC());
-        return (Byte[]) bytesArray.toArray();
+        return Obj2BytesArray(bytesArray.toArray());
     }
 
     public int ParsePacket(byte[] data,int awaitingID, IOnReceiveAction actionTarget)
@@ -125,6 +135,9 @@ public class BTPacketFactory {
 
         if (calculatedCRC == ReadIntFromArray(data, headerSize + payloadSize)) {
 
+            if(actionTarget!=null) {
+                actionTarget.OnAcknowledged(packetID);
+            }
             switch (packetType) {
                 case ScheduleRecv:
                     if (awaitingID != packetID) {
@@ -144,14 +157,16 @@ public class BTPacketFactory {
                         item.effectType.fromValue((int)data[offset+6]);
                         item.folderID = data[offset+7];
                         item.songID = data[offset+8];
-                        item.effectEnabledTime = ReadIntFromArray(data,offset+9);
-                        item.musicEnabledTime = ReadIntFromArray(data,offset+13);
+                        item.lightEnabledTime = ReadIntFromArray(data,offset+9);
+                        item.soundEnabledTime = ReadIntFromArray(data,offset+13);
                         item.dayOfWeekMask = data[offset+17];
 
                         items.add(item);
                     }
 
-                    actionTarget.OnScheduleUpdate(items);
+                    if(actionTarget!=null) {
+                        actionTarget.OnScheduleUpdate(items);
+                    }
                     break;
             }
         }
@@ -186,6 +201,7 @@ public class BTPacketFactory {
     public interface IOnReceiveAction
     {
         void OnScheduleUpdate(List<ScheduleViewAdapter.ScheduleItem> scheduleItems);
+        void OnAcknowledged(int packetID);
     }
 }
 

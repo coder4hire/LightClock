@@ -2,9 +2,9 @@
 
 #include "time.h"
 
-#define ALARMS_NUM 10
+#define SCHEDULE_ITEMS_NUM 10
 
-class CAlarmConfig
+class CScheduleItem
 {
 public:
 	enum EEffectType
@@ -14,21 +14,29 @@ public:
 		EF_RED
 	};
 
+	unsigned char id;
+	bool isEnabled;
 	time_t execTime;
 	uint8_t effectType;
-	long effectDuration;
-	uint8_t songNum;
-	int8_t folderNum;
-	long songDuration;
+	uint8_t folderID;
+	uint8_t songID;
+	int lightEnabledTime;
+	int soundEnabledTime;
+	uint8_t dayOfWeekMask = 0;
+
 };
 
 #pragma pack(push,1)
 class CBoardConfig
 {
-public:
+protected:
 	CBoardConfig();
+public:
 	~CBoardConfig();
+	static CBoardConfig Inst;
 
-	CAlarmConfig Alarms[ALARMS_NUM];
+	CScheduleItem Schedule[SCHEDULE_ITEMS_NUM];
+
+	bool UpdateScheduleItem(const CScheduleItem& item);
 };
 #pragma pack(pop)

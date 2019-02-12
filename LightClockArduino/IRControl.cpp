@@ -3,6 +3,16 @@
 
 IRControl IRControl::Inst;
 
+const unsigned PROGMEM long IRControl::buttonCodes[IR_MAX] =
+{
+	0, // IR_CANCEL
+	0, // IR_OK
+	0, // IR_UP
+	0, // IR_DOWN
+	0xF807FF00, // IR_LEFT
+	0xF906FF00, // IR_RIGHT
+};
+
 IRControl::IRControl()
 {
 	pinMode(PIN_A0, INPUT_PULLUP);
@@ -43,7 +53,6 @@ void IRControl::StartReading()
 	bitNum = -1;
 	code = 0;
 	isFinished = false;
-	//Serial.println(F("IR Start"));
 }
 
 unsigned long IRControl::DecodeData()
@@ -56,6 +65,20 @@ unsigned long IRControl::DecodeData()
 	}
 	return 0;
 }
+
+IR_ACTIONS IRControl::GetButtonPressed()
+{
+	unsigned long code = IRControl::DecodeData();
+	for (int i = 0; i < IR_MAX; i++)
+	{
+		if (pgm_read_dword(buttonCodes) == code)
+		{
+			return (IR_ACTIONS)i;
+		}
+	}
+	return IR_NONE;
+}
+
 
 ISR(TIMER2_OVF_vect)        // interrupt service routine that wraps a user defined function supplied by attachInterrupt
 {
