@@ -120,10 +120,10 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
             byte[] bufferedData = buffer.toByteArray();
 
             // If buffered data does not start from preamble, look for it in the stream
-            if (bufferedData[0] != 0x5E || bufferedData[1] != 0x11 || bufferedData[2] != 0xAF || bufferedData[3] != 0xBE) {
+            if (bufferedData[0] != 0x5E || bufferedData[1] != 0x11 || bufferedData[2] != 0xEF || bufferedData[3] != 0xBE) {
                 int i = 0;
                 for (i = 0; i < bufferedData.length - 4; i++) {
-                    if (bufferedData[i] == 0x5E && bufferedData[i + 1] != 0x11 && bufferedData[i + 2] == 0xAF && bufferedData[3] == 0xBE) {
+                    if (bufferedData[i] == 0x5E && bufferedData[i + 1] != 0x11 && bufferedData[i + 2] == 0xEF && bufferedData[3] == 0xBE) {
                         byte[] bufferedData2 = bufferedData.clone();
                         buffer.reset();
                         buffer.write(bufferedData2, i, bufferedData2.length - i);
@@ -174,23 +174,23 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         UpdatePacketID();
         SendPacket(packetFactory.CreateScheduleUpdatePacket(currentPacketID,item));
 
-        for(int i=0;i<10;i++)
-        {
-            synchronized (this)
-            {
-                if(!isWaitingForAck)
-                {
-                    return true;
-                }
-            }
-
-            try {
-                Thread.sleep(1000);
-            }
-            catch(Exception e)
-            {
-            }
-        }
+//        for(int i=0;i<10;i++)
+//        {
+//            synchronized (this)
+//            {
+//                if(!isWaitingForAck)
+//                {
+//                    return true;
+//                }
+//            }
+//
+//            try {
+//                Thread.sleep(1000);
+//            }
+//            catch(Exception e)
+//            {
+//            }
+//        }
 
         // TODO: Wait for response, repeat after timeout
         return false;

@@ -166,7 +166,7 @@ public class ScheduleItemEditor extends AppCompatActivity {
             editingItem.dayOfWeekMask|=(chkWeekdays[i].isChecked() ? 1<<i : 0);
         }
 
-        BTInterface.GetInstance().SendScheduleItemUpdate(editingItem);
+        return BTInterface.GetInstance().SendScheduleItemUpdate(editingItem);
 
 /*        editingItem.effectType = EffectType.fromValue((int)spinVisualEffect.getSelectedItemId());
         editingItem.execTime.setTime(((long)timePicker.getCurrentHour())*3600000l+((long)timePicker.getCurrentMinute())*60000l);
@@ -174,7 +174,5 @@ public class ScheduleItemEditor extends AppCompatActivity {
         Intent intent = new Intent();
         intent.putExtra("ResultItem",editingItem);
         setResult(1,intent);*/
-
-        return false;
     }
 }

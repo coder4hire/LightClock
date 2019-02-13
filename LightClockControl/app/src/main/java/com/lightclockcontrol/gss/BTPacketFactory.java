@@ -79,7 +79,7 @@ public class BTPacketFactory {
 
     protected void WriteHeader(int packetID,PacketTypes packetType) {
         bytesArray.clear();
-        WriteToArray(0xBEAF115E);// Preamble
+        WriteToArray(0xBEEF115E);// Preamble
         WriteToArray(packetID);
         WriteToArray((short)packetType.getValue());
         WriteToArray((short) 0); // length
@@ -117,7 +117,7 @@ public class BTPacketFactory {
             return PacketTypes.NotReady.getValue();
         }
         // Check preamble
-        if(data[0]!=0x5E || data[1]!=0x11 || data[2]!=0xAF || data[3]!=0xBE)
+        if(data[0]!=0x5E || data[1]!=0x11 || data[2]!=0xEF || data[3]!=0xBE)
         {
             return PacketTypes.Error.getValue();
         }

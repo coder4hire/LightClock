@@ -4,6 +4,7 @@
 #include "DFRobotDFPlayerMini.h"
 #include "RTClib.h"
 #include "IRControl.h"
+#include "Scheduler.h"
 
 #define DFPLAYER_RECONNECT_INTERVAL 500
 #define TRACE(x) Serial.println(x);

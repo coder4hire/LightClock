@@ -1,14 +1,11 @@
 #include "BTInterface.h"
-
-/* RFC1952  - 0x04C11DB7 (as in Java) */
-/* Here it is in reverced bit order */
-#define POLY 0x76DC4190
+#include "Scheduler.h"
 
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
 //#define POLY 0x82f63b78
 
 /* CRC-32 (Ethernet, ZIP, etc.) polynomial in reversed bit order. */
-/* #define POLY 0xedb88320 */
+ #define POLY 0xedb88320 
 
 CBTInterface CBTInterface::Inst;
 
@@ -32,7 +29,7 @@ void CBTInterface::Init()
 	BTSerial.listen();
 }
 
-uint32_t CBTInterface::CRC32(const unsigned char *buf, size_t len, uint32_t crc)
+uint32_t CBTInterface::CRC32(const uint8_t *buf, size_t len, uint32_t crc)
 {
 	int k;
 
@@ -76,7 +73,6 @@ void CBTInterface::ProcessBTCommands()
 		switch (pHeader->PacketType)
 		{
 		case PACK_ScheduleUpdate:
-			Serial.println("!!!Schedule");
 			OnScheduleUpdate(pHeader, cmdBuffer + sizeof(BTPacketHeader));
 			break;
 		}
@@ -97,13 +93,13 @@ bool CBTInterface::CheckForCompleteCommand()
 	if (cmdBufLength >= sizeof(BTPacketHeader))
 	{
 		BTPacketHeader* pHeader = (BTPacketHeader*)cmdBuffer;
-		if (pHeader->Preamble != 0xBEAF115E)
+		if (pHeader->Preamble != 0xBEEF115E)
 		{
 			// Look for preamble in buffer
 			int i = 0;
 			for (; i < cmdBufLength - sizeof(uint32_t);i++)
 			{
-				if (*(uint32_t*)(cmdBuffer + i) == 0xBEAF115E)
+				if (*(uint32_t*)(cmdBuffer + i) == 0xBEEF115E)
 				{
 					cmdBufLength -= i;
 					memmove(cmdBuffer, cmdBuffer + i, cmdBufLength);
@@ -126,7 +122,7 @@ bool CBTInterface::CheckForCompleteCommand()
 				Serial.print(" ");
 			}
 			uint32_t storedCRC32 = *(uint32_t*)(cmdBuffer + pHeader->PayloadLength + sizeof(BTPacketHeader));
-			if (CRC32(cmdBuffer, pHeader->PayloadLength) == storedCRC32)
+			if (CRC32(cmdBuffer, pHeader->PayloadLength + sizeof(BTPacketHeader)) == storedCRC32)
 			{
 				Serial.println("!!!Got packet, good CRC");
 				memcpy(rcvdCmd, cmdBuffer, fullPacketLength);
@@ -155,8 +151,31 @@ void CBTInterface::OnScheduleUpdate(BTPacketHeader* pHeader, void* pPayload)
 	if (pHeader->PayloadLength == sizeof(CScheduleItem))
 	{
 		CScheduleItem* item = (CScheduleItem*)pPayload;
-		CBoardConfig::Inst.UpdateScheduleItem(*item);
+		CScheduler::Inst.UpdateScheduleItem(*item);
+
+		// Send back reply
+		SendSchedule(pHeader->PacketID);
 	}
+}
+
+bool CBTInterface::SendSchedule(uint32_t packetID)
+{
+	uint8_t buffer[sizeof(BTPacketHeader) + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM + sizeof(uint32_t)];
+	*(BTPacketHeader*)buffer = BTPacketHeader(PACK_ScheduleRecv, packetID);
+	CScheduleItem* payload = (CScheduleItem*)(buffer + sizeof(BTPacketHeader));
+	for (int i = 0; i < SCHEDULE_ITEMS_NUM; i++)
+	{
+		payload[i] = CScheduler::Inst.Schedule[i];
+	}
+
+	((BTPacketHeader*)buffer)->PayloadLength = sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM;
+	*(uint32_t*)(buffer+sizeof(BTPacketHeader)+sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM) = CRC32((const uint8_t*)buffer, sizeof(BTPacketHeader) + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM);
+
+	Serial.print(((BTPacketHeader*)buffer)->PayloadLength);
+	Serial.println("...Sending...");
+	BTSerial.write(buffer, sizeof(buffer));
+	BTSerial.flush();
+	return true;
 }
 
 
