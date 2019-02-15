@@ -39,8 +39,8 @@ enum PacketTypes {
 public class BTPacketFactory {
     ArrayList<Byte> bytesArray = new ArrayList<Byte>();
 
-    final int headerSize = 12;
-    final int crcSize = 4;
+    static public final int headerSize = 12;
+    static public final int crcSize = 4;
 
     protected void WriteToArray(long data) {
         WriteToArray((int) (data & 0xFFFFFFFF));
@@ -68,12 +68,12 @@ public class BTPacketFactory {
 
     protected int ReadIntFromArray(byte[] arr, int offset)
     {
-        return ((int)arr[offset]) | (((int)arr[offset+1])<<8) | (((int)arr[offset+2])<<16) | (((int)arr[offset+3])<<24);
+        return arr[offset]&0xFF | ((arr[offset+1]<<8)&0xFF00) | ((arr[offset+2]<<16)&0xFF0000) | (( arr[offset+3]<<24)&0xFF000000);
     }
 
     protected short ReadShortFromArray(byte[] arr, int offset)
     {
-        return (short)(((int)arr[offset]) | (((int)arr[offset+1])<<8));
+        return (short)((arr[offset]&0xFF) | ((arr[offset+1]<<8)&0xFF00));
     }
 
 
@@ -117,9 +117,9 @@ public class BTPacketFactory {
             return PacketTypes.NotReady.getValue();
         }
         // Check preamble
-        if(data[0]!=0x5E || data[1]!=0x11 || data[2]!=0xEF || data[3]!=0xBE)
+        if(ReadIntFromArray(data,0)!=(int)0xBEEF115E)
         {
-            return PacketTypes.Error.getValue();
+            return 0;
         }
 
         int packetID = ReadIntFromArray(data,4);
@@ -127,9 +127,9 @@ public class BTPacketFactory {
         PacketTypes packetType = PacketTypes.fromValue((int)ReadShortFromArray(data,8));
 
         int payloadSize = ReadShortFromArray(data,10);
-        if(payloadSize+headerSize+crcSize<data.length)
+        if(payloadSize+headerSize+crcSize>data.length)
         {
-            return PacketTypes.NotReady.getValue();
+            return 0;
         }
         int calculatedCRC = CalcCRC(data,payloadSize+headerSize);
 
@@ -144,24 +144,24 @@ public class BTPacketFactory {
                         return payloadSize + headerSize + crcSize; // wrong packet ID for this type, skipt the packet
                     }
 
-                    ArrayList<ScheduleViewAdapter.ScheduleItem> items = new ArrayList<ScheduleViewAdapter.ScheduleItem>();
-
                     int itemSize = 18;
                     int itemsCount = payloadSize / itemSize; // 21 is item size in bytes
+                    ScheduleViewAdapter.ScheduleItem[] items = new ScheduleViewAdapter.ScheduleItem[itemsCount];
+
                     for(int i=0;i<itemsCount;i++)
                     {
                         int offset = headerSize+itemSize*i;
                         ScheduleViewAdapter.ScheduleItem item = new ScheduleViewAdapter.ScheduleItem(data[offset]);
                         item.isEnabled = data[offset+1]!=0;
                         item.execTime.setTime((long)ReadIntFromArray(data,offset+2));
-                        item.effectType.fromValue((int)data[offset+6]);
+                        item.effectType = EffectType.fromValue((int)data[offset+6]);
                         item.folderID = data[offset+7];
                         item.songID = data[offset+8];
                         item.lightEnabledTime = ReadIntFromArray(data,offset+9);
                         item.soundEnabledTime = ReadIntFromArray(data,offset+13);
                         item.dayOfWeekMask = data[offset+17];
 
-                        items.add(item);
+                        items[i]=item;
                     }
 
                     if(actionTarget!=null) {
@@ -200,7 +200,7 @@ public class BTPacketFactory {
 
     public interface IOnReceiveAction
     {
-        void OnScheduleUpdate(List<ScheduleViewAdapter.ScheduleItem> scheduleItems);
+        void OnScheduleUpdate(ScheduleViewAdapter.ScheduleItem[] scheduleItems);
         void OnAcknowledged(int packetID);
     }
 }

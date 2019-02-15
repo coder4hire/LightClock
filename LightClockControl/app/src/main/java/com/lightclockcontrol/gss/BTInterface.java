@@ -1,33 +1,23 @@
 package com.lightclockcontrol.gss;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
-import app.akexorcist.bluetoothspp.ListenerActivity;
 import app.akexorcist.bluetotohspp.library.BluetoothSPP;
 import app.akexorcist.bluetotohspp.library.BluetoothState;
-import app.akexorcist.bluetotohspp.library.DeviceList;
 
 public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacketFactory.IOnReceiveAction {
 
-    BluetoothSPP bt;
-    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    BTPacketFactory packetFactory = new BTPacketFactory();
+    private BluetoothSPP bt;
+    private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    private BTPacketFactory packetFactory = new BTPacketFactory();
     private boolean isWaitingForAck = false;
 
-    int currentPacketID = 1;
+    private int currentPacketID = 1;
     static private BTInterface instance=null;
 
     static public BTInterface GetInstance()
@@ -114,16 +104,16 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
     }
 
     @Override
-    public void onDataReceived(byte[] data, String message) {
-        try {
-            buffer.write(data);
-            byte[] bufferedData = buffer.toByteArray();
+    public void onDataReceived(byte data) {
+        buffer.write(data);
+        byte[] bufferedData = buffer.toByteArray();
 
-            // If buffered data does not start from preamble, look for it in the stream
-            if (bufferedData[0] != 0x5E || bufferedData[1] != 0x11 || bufferedData[2] != 0xEF || bufferedData[3] != 0xBE) {
+        // If buffered data does not start from preamble, look for it in the stream
+        if(bufferedData.length>=BTPacketFactory.headerSize) {
+            if (bufferedData[0] != (byte)0x5E || bufferedData[1] != (byte)0x11 || bufferedData[2] != (byte)0xEF || bufferedData[3] != (byte)0xBE) {
                 int i = 0;
                 for (i = 0; i < bufferedData.length - 4; i++) {
-                    if (bufferedData[i] == 0x5E && bufferedData[i + 1] != 0x11 && bufferedData[i + 2] == 0xEF && bufferedData[3] == 0xBE) {
+                    if (bufferedData[i] == (byte)0x5E && bufferedData[i + 1] == (byte)0x11 && bufferedData[i + 2] == (byte)0xEF && bufferedData[i + 3] == (byte)0xBE) {
                         byte[] bufferedData2 = bufferedData.clone();
                         buffer.reset();
                         buffer.write(bufferedData2, i, bufferedData2.length - i);
@@ -136,18 +126,17 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
                 }
             }
 
-            int bytesToRemove = packetFactory.ParsePacket(bufferedData, currentPacketID,this);
+            int bytesToRemove = packetFactory.ParsePacket(bufferedData, currentPacketID, this);
 
-            if (bytesToRemove < bufferedData.length) {
-                byte[] bufferedData2 = bufferedData.clone();
-                buffer.reset();
-                buffer.write(bufferedData2, bytesToRemove, bufferedData2.length - bytesToRemove);
-            } else {
-                buffer.reset();
+            if(bytesToRemove>0) {
+                if (bytesToRemove < bufferedData.length) {
+                    byte[] bufferedData2 = bufferedData.clone();
+                    buffer.reset();
+                    buffer.write(bufferedData2, bytesToRemove, bufferedData2.length - bytesToRemove);
+                } else {
+                    buffer.reset();
+                }
             }
-
-        } catch (java.io.IOException ex) {
-            buffer.reset();
         }
     }
 
@@ -172,7 +161,8 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
     public boolean SendScheduleItemUpdate(ScheduleViewAdapter.ScheduleItem item)
     {
         UpdatePacketID();
-        SendPacket(packetFactory.CreateScheduleUpdatePacket(currentPacketID,item));
+        byte[] packet = packetFactory.CreateScheduleUpdatePacket(currentPacketID,item);
+        SendPacket(packet);
 
 //        for(int i=0;i<10;i++)
 //        {
@@ -190,15 +180,19 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 //            catch(Exception e)
 //            {
 //            }
+//
+//            SendPacket(packet);
 //        }
 
-        // TODO: Wait for response, repeat after timeout
+//        isWaitingForAck=false;
+
         return false;
     }
 
     @Override
-    public void OnScheduleUpdate(List<ScheduleViewAdapter.ScheduleItem> scheduleItems) {
+    public void OnScheduleUpdate(ScheduleViewAdapter.ScheduleItem[] scheduleItems) {
         synchronized (this) {
+            MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE,scheduleItems).sendToTarget();
         }
     }
 
@@ -210,5 +204,10 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
                 isWaitingForAck=false;
             }
         }
+    }
+
+    public BluetoothSPP GetSPP()
+    {
+        return bt;
     }
 }

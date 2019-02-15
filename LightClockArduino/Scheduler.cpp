@@ -4,6 +4,10 @@ CScheduler CScheduler::Inst;
 
 CScheduler::CScheduler()
 {
+	for (int i = 0; i < SCHEDULE_ITEMS_NUM; i++)
+	{
+		Schedule[i].id = i;
+	}
 }
 
 CScheduler::~CScheduler()
@@ -20,7 +24,7 @@ bool CScheduler::UpdateScheduleItem(const CScheduleItem & item)
 	{
 		if (Schedule[i].id == item.id)
 		{
-			Schedule[i].id = item.id;
+			Schedule[i] = item;
 			return true;
 		}
 	}

@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.design.internal.ParcelableSparseArray;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 
@@ -23,7 +26,7 @@ import java.util.ArrayList;
 public class AlarmsFragment extends Fragment {
     RecyclerView scheduleList;
     private RecyclerView.LayoutManager layoutManager;
-    ScheduleViewAdapter adapter;
+    private ScheduleViewAdapter adapter;
     final int ALARMS_NUM = 10;
 
     private ArrayList<ScheduleViewAdapter.ScheduleItem> scheduleItems = new ArrayList<>();
@@ -98,14 +101,14 @@ public class AlarmsFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode==1)
         {
-            Parcelable parcel = data.getExtras().getParcelable("ResultItem");
+            Parcelable[] parcel = data.getExtras().getParcelableArray("ResultItem");
             if(parcel!=null) {
-                UpdateSchedule((ArrayList<ScheduleViewAdapter.ScheduleItem> ) parcel);
+                UpdateSchedule((ScheduleViewAdapter.ScheduleItem[]) parcel);
             }
         }
     }
 
-    public void UpdateSchedule(ArrayList<ScheduleViewAdapter.ScheduleItem> newItems)
+    public void UpdateSchedule(ScheduleViewAdapter.ScheduleItem[] newItems)
     {
         for(ScheduleViewAdapter.ScheduleItem item : newItems) {
             adapter.UpdateScheduleItem(item);
