@@ -47,7 +47,7 @@ public:
 	bool SendConfig(CBoardConfig * pConfig);
 	bool LoadConfig(CBoardConfig * pConfig);
 
-	void Listen(){ BTSerial.listen(); }
+	void Listen(){ if(!BTSerial.isListening()) BTSerial.listen(); }
 	void ProcessBTCommands();
 
 protected:

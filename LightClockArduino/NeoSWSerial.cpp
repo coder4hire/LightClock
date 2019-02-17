@@ -583,3 +583,8 @@ size_t NeoSWSerial::write(uint8_t txChar)
   return 1;               // 1 character sent
 
 } // write
+
+bool NeoSWSerial::isListening()
+{
+	return listener==this;
+}

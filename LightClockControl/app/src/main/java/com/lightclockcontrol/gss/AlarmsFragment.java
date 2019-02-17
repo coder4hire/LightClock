@@ -29,7 +29,7 @@ public class AlarmsFragment extends Fragment {
     private ScheduleViewAdapter adapter;
     final int ALARMS_NUM = 10;
 
-    private ArrayList<ScheduleViewAdapter.ScheduleItem> scheduleItems = new ArrayList<>();
+    private ScheduleViewAdapter.ScheduleItem[] scheduleItems = new ScheduleViewAdapter.ScheduleItem[ALARMS_NUM];
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -62,7 +62,22 @@ public class AlarmsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
+
+        //TODO: replace with request to alarm clock retrieving actual schedule
+        for (byte i = 0; i < ALARMS_NUM; i++) {
+            scheduleItems[i]=new ScheduleViewAdapter.ScheduleItem(i);
+        }
+
+        adapter = new ScheduleViewAdapter(scheduleItems, new ScheduleViewAdapter.OnListFragmentInteractionListener() {
+            @Override
+            public void onListFragmentInteraction(ScheduleViewAdapter.ScheduleItem item) {
+                Intent i = new Intent(getActivity().getBaseContext(), ScheduleItemEditor.class);
+                i.putExtra("EditingItem", item);
+                startActivityForResult(i,0);
+            }
+        });
+
+        //        if (getArguments() != null) {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
 //        }
@@ -79,18 +94,6 @@ public class AlarmsFragment extends Fragment {
         layoutManager = new LinearLayoutManager(this.getContext());
         scheduleList.setLayoutManager(layoutManager);
 
-        for (byte i = 0; i < ALARMS_NUM; i++) {
-            scheduleItems.add(new ScheduleViewAdapter.ScheduleItem(i));
-        }
-
-        adapter = new ScheduleViewAdapter(scheduleItems, new ScheduleViewAdapter.OnListFragmentInteractionListener() {
-            @Override
-            public void onListFragmentInteraction(ScheduleViewAdapter.ScheduleItem item) {
-                Intent i = new Intent(getActivity().getBaseContext(), ScheduleItemEditor.class);
-                i.putExtra("EditingItem", item);
-                startActivityForResult(i,0);
-            }
-        });
         scheduleList.setAdapter(adapter);
 
         return view;

@@ -87,6 +87,7 @@ public:
   typedef void (* isr_t)( uint8_t );
   void attachInterrupt( isr_t fn );
   void detachInterrupt() { attachInterrupt( (isr_t) NULL ); };
+  bool isListening();
 
 private:
            uint8_t  rxPin, txPin;

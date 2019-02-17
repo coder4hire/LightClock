@@ -153,7 +153,7 @@ public class BTPacketFactory {
                         int offset = headerSize+itemSize*i;
                         ScheduleViewAdapter.ScheduleItem item = new ScheduleViewAdapter.ScheduleItem(data[offset]);
                         item.isEnabled = data[offset+1]!=0;
-                        item.execTime.setTime((long)ReadIntFromArray(data,offset+2));
+                        item.execTime.setTime((long)ReadIntFromArray(data,offset+2)*1000l);
                         item.effectType = EffectType.fromValue((int)data[offset+6]);
                         item.folderID = data[offset+7];
                         item.songID = data[offset+8];

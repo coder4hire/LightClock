@@ -69,12 +69,16 @@ unsigned long IRControl::DecodeData()
 IR_ACTIONS IRControl::GetButtonPressed()
 {
 	unsigned long code = IRControl::DecodeData();
-	for (int i = 0; i < IR_MAX; i++)
+	if (code)
 	{
-		if (pgm_read_dword(buttonCodes) == code)
+		for (int i = 0; i < IR_MAX; i++)
 		{
-			return (IR_ACTIONS)i;
+			if (pgm_read_dword(buttonCodes) == code)
+			{
+				return (IR_ACTIONS)i;
+			}
 		}
+		Serial.println(code, 16);
 	}
 	return IR_NONE;
 }

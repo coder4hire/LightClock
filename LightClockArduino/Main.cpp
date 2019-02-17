@@ -11,9 +11,9 @@ CMain CMain::Inst;
 // But my Nano has this pin broken, so it is rewired to D12
 #define BUTTON_PIN 12
 
-CMain::CMain():
-	softwareSerialPort(3, 4) // RX, TX
+CMain::CMain()
 {
+	prevButtonState = 0;
 }
 
 
@@ -24,7 +24,6 @@ CMain::~CMain()
 void CMain::Setup()
 {
 	Serial.begin(115200);
-	softwareSerialPort.begin(9600);
 	Wire.begin();
 
 	// Set up RTC clock
@@ -38,14 +37,6 @@ void CMain::Setup()
 		Serial.println("RTC is running!");
 	}
 
-	//Set up DFPlayer
-	//dfPlayer.setTimeOut(1000);
-	int retries = 10;
-	while (!dfPlayer.begin(softwareSerialPort, true, retries == 10) && retries--)
-	{
-		TRACE(F("Unable to connect to DFPlayer"));
-	}
-
 	// Setting up button pin
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
@@ -53,6 +44,10 @@ void CMain::Setup()
 	CBTInterface::Inst.Init();
 	IRControl::Inst.Begin();
 	CRGBControl::Inst.Init();
+	Player.Init();
+	Player.SetVolume(5);
+
+	CBTInterface::Inst.Listen();
 
 
 	/*dfPlayer.volume(2);
@@ -145,6 +140,9 @@ void CMain::Loop()
 
 	CBTInterface::Inst.ProcessBTCommands();
 
+	CScheduler::Inst.OnTimeTick();
+	CBTInterface::Inst.Listen();
+
 /*	c++;
 	if (!c)
 	{
@@ -166,15 +164,21 @@ void CMain::Loop()
 
 bool CMain::CheckButtonStatus()
 {
-	pinMode(7, INPUT);
-	return !digitalRead(BUTTON_PIN);
+	uint8_t state = digitalRead(BUTTON_PIN);
+	if (!state && prevButtonState != state)
+	{
+		prevButtonState = state;
+		return true;
+	}
+	prevButtonState = state;
+	return false;
 }
 
 void CMain::OnButtonPressed()
 {
-	softwareSerialPort.listen();
-	dfPlayer.next();
-	CBTInterface::Inst.Listen();
+	Serial.println("Button is pressed");
+	CScheduler::Inst.TestRunEffect(CScheduleItem::EF_SUNRISE);
+	//Player.Next();
 }
 
 void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)
@@ -182,14 +186,10 @@ void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)
 	switch (actionButton)
 	{
 	case IR_LEFT:
-		softwareSerialPort.listen();
-		dfPlayer.next();
-		CBTInterface::Inst.Listen();
+		Player.Next();
 		break;
 	case IR_RIGHT:
-		softwareSerialPort.listen();
-		dfPlayer.previous();
-		CBTInterface::Inst.Listen();
+		Player.Previous();
 		break;
 	}
 }

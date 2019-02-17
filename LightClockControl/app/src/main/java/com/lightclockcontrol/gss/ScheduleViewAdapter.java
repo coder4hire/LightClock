@@ -6,20 +6,16 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.CheckedTextView;
-import android.widget.Spinner;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import com.lightclockcontrol.gss.dummy.DummyContent;
 import com.lightclockcontrol.gss.dummy.DummyContent.DummyItem;
 
-import org.w3c.dom.Text;
-
 import java.sql.Time;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link DummyItem} and makes a call to the
@@ -28,9 +24,9 @@ import java.util.List;
  */
 public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapter.ViewHolder> {
 
-    private final List<ScheduleItem> mValues;
+    private final ScheduleItem[] mValues;
     private final OnListFragmentInteractionListener mListener;
-    public ScheduleViewAdapter(List<ScheduleItem> items, OnListFragmentInteractionListener listener) {
+    public ScheduleViewAdapter(ScheduleItem[] items, OnListFragmentInteractionListener listener) {
         mValues = items;
         mListener = listener;
     }
@@ -44,9 +40,12 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.mItem = mValues.get(position);
+        holder.mItem = mValues[position];
         holder.chkEnabled.setChecked(holder.mItem.isEnabled);
-        holder.lblDescription.setText(holder.mItem.execTime.toString() + " (" +holder.mItem.effectType.toString()+")");
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        cal.setTime(holder.mItem.execTime);
+        holder.lblDescription.setText(String.format("%02d:%02d (",cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE))
+                +holder.mItem.effectType.toString()+")");
 
         holder.lblDescription.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,11 +61,11 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
 
     public boolean UpdateScheduleItem(ScheduleItem item)
     {
-        for(int i=0;i<mValues.size();i++)
+        for(int i=0;i<mValues.length;i++)
         {
-            if(mValues.get(i).id == item.id)
+            if(mValues[i].id == item.id)
             {
-                mValues.set(i,item);
+                mValues[i]=item;
                 notifyDataSetChanged();
                 return true;
             }
@@ -76,7 +75,7 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return mValues.length;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -103,7 +102,7 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
     public static class ScheduleItem implements Parcelable {
         public final byte id;
         public boolean isEnabled;
-        public Time execTime = new Time(0);
+        public Date execTime = new Date(0);
         public EffectType effectType = EffectType.None;
         public byte folderID;
         public byte songID;

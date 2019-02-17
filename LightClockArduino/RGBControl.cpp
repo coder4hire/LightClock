@@ -43,6 +43,6 @@ void CRGBControl::SetRGBW(RGBW rgbw)
 {
 	analogWrite(PIN_RED, pgm_read_byte(brightness2PWM+rgbw.R));
 	analogWrite(PIN_GREEN, pgm_read_byte(brightness2PWM + rgbw.G));
-	analogWrite(PIN_BLUE, rgbw.B);
-	analogWrite(PIN_WHITE, rgbw.W);
+	analogWrite(PIN_BLUE, pgm_read_byte(brightness2PWM + rgbw.B));
+	analogWrite(PIN_WHITE, pgm_read_byte(brightness2PWM + rgbw.W));
 }

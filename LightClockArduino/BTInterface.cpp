@@ -67,6 +67,7 @@ void CBTInterface::OnBTCharReceived(uint8_t c)
 
 void CBTInterface::ProcessBTCommands()
 {
+	Listen();
 	if (CheckForCompleteCommand())
 	{
 		BTPacketHeader* pHeader = (BTPacketHeader*)rcvdCmd;
@@ -136,10 +137,17 @@ bool CBTInterface::CheckForCompleteCommand()
 			}
 
 			// Removing packet, no matter whether it was good or bad
-			cmdBufLength -= fullPacketLength;
-			if (cmdBufLength)
+			if (fullPacketLength < cmdBufLength)
 			{
-				memmove(cmdBuffer, cmdBuffer + fullPacketLength, cmdBufLength);
+				cmdBufLength -= fullPacketLength;
+				if (cmdBufLength)
+				{
+					memmove(cmdBuffer, cmdBuffer + fullPacketLength, cmdBufLength);
+				}
+			}
+			else
+			{
+				cmdBufLength = 0;
 			}
 		}
 	}

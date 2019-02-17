@@ -19,7 +19,9 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class ScheduleItemEditor extends AppCompatActivity {
 
@@ -49,13 +51,13 @@ public class ScheduleItemEditor extends AppCompatActivity {
         edtLightLength = (EditText) findViewById(R.id.txtLightLength);
         edtSoundLength = (EditText) findViewById(R.id.txtSoundLength);
 
-        chkWeekdays[0] = (CheckBox) findViewById(R.id.chkMon);
-        chkWeekdays[1] = (CheckBox) findViewById(R.id.chkTue);
-        chkWeekdays[2] = (CheckBox) findViewById(R.id.chkWed);
-        chkWeekdays[3] = (CheckBox) findViewById(R.id.chkThu);
-        chkWeekdays[4] = (CheckBox) findViewById(R.id.chkFri);
-        chkWeekdays[5] = (CheckBox) findViewById(R.id.chkSat);
-        chkWeekdays[6] = (CheckBox) findViewById(R.id.chkSun);
+        chkWeekdays[0] = (CheckBox) findViewById(R.id.chkSun);
+        chkWeekdays[1] = (CheckBox) findViewById(R.id.chkMon);
+        chkWeekdays[2] = (CheckBox) findViewById(R.id.chkTue);
+        chkWeekdays[3] = (CheckBox) findViewById(R.id.chkWed);
+        chkWeekdays[4] = (CheckBox) findViewById(R.id.chkThu);
+        chkWeekdays[5] = (CheckBox) findViewById(R.id.chkFri);
+        chkWeekdays[6] = (CheckBox) findViewById(R.id.chkSat);
 
         // Filling in spinner values
         ArrayAdapter<String> spinnerAdapterEffects= new ArrayAdapter<String>(App.getContext(), android.R.layout.simple_spinner_dropdown_item);
@@ -71,14 +73,20 @@ public class ScheduleItemEditor extends AppCompatActivity {
 
         spinFolder.setAdapter(spinnerAdapterFolders);
 
+        // Configuring TimePicker
+        timePicker.setIs24HourView(true);
+
         // Loading initial data
         Parcelable parcel = this.getIntent().getExtras().getParcelable("EditingItem");
         if(parcel!=null) {
             editingItem = (ScheduleViewAdapter.ScheduleItem) parcel;
 
             spinVisualEffect.setSelection(editingItem.effectType.getValue());
-            timePicker.setCurrentHour(editingItem.execTime.getHours());
-            timePicker.setCurrentMinute(editingItem.execTime.getMinutes());
+
+            Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            cal.setTime(editingItem.execTime);
+            timePicker.setCurrentHour(cal.get(Calendar.HOUR_OF_DAY));
+            timePicker.setCurrentMinute(cal.get(Calendar.MINUTE));
 
             spinFolder.setSelection(editingItem.folderID);
             if(editingItem.songID!=255) {
@@ -155,7 +163,7 @@ public class ScheduleItemEditor extends AppCompatActivity {
 
     private boolean SaveDataToClock() {
         editingItem.effectType = EffectType.fromValue((int)spinVisualEffect.getSelectedItemId());
-        editingItem.execTime.setTime(((long)timePicker.getCurrentHour())*3600000l+((long)timePicker.getCurrentMinute())*60000l);
+        editingItem.execTime.setTime(((long)timePicker.getCurrentHour())*3600l+((long)timePicker.getCurrentMinute())*60l);
         editingItem.folderID= (byte)(spinFolder.getSelectedItemId());
         editingItem.songID = (byte)Integer.parseInt(edtSong.getText().toString());
         editingItem.lightEnabledTime = Integer.parseInt(edtLightLength.getText().toString());

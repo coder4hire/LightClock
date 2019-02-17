@@ -376,6 +376,7 @@ public class BluetoothService {
                 buffer2[buffer2.length - 2] = 0x0A;
                 buffer2[buffer2.length - 1] = 0x0D;*/
                 mmOutStream.write(buffer);
+                mmOutStream.flush();
                 // Share the sent message back to the UI Activity
                 mHandler.obtainMessage(BluetoothState.MESSAGE_WRITE
                         , -1, -1, buffer).sendToTarget();
