@@ -121,10 +121,11 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
                     }
                 }
                 if (i == bufferedData.length - 4) {
-                    buffer.reset();
                     return;
                 }
             }
+
+            bufferedData = buffer.toByteArray();
 
             int bytesToRemove = packetFactory.ParsePacket(bufferedData, currentPacketID, this);
 
@@ -151,58 +152,56 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
     public boolean SendPacket(byte[] data)
     {
-        synchronized(this) {
-            bt.send( data,false);
-            isWaitingForAck=true;
-        }
+        byte[] dummy = new byte[4];
+        dummy[0] = dummy[1] = dummy[2] = dummy[3] = 0;
+
+        bt.send(data, false);
+        bt.send(dummy, false);
+
+        isWaitingForAck=true;
         return true;
     }
 
     public boolean SendScheduleItemUpdate(ScheduleViewAdapter.ScheduleItem item)
     {
         UpdatePacketID();
-        byte[] packet = packetFactory.CreateScheduleUpdatePacket(currentPacketID,item);
+        final byte[] packet = packetFactory.CreateScheduleUpdatePacket(currentPacketID,item);
         SendPacket(packet);
 
-//        for(int i=0;i<10;i++)
-//        {
-//            synchronized (this)
-//            {
-//                if(!isWaitingForAck)
-//                {
-//                    return true;
-//                }
-//            }
-//
-//            try {
-//                Thread.sleep(1000);
-//            }
-//            catch(Exception e)
-//            {
-//            }
-//
-//            SendPacket(packet);
-//        }
+        Thread repeater = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for(int i=0;i<10;i++) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                    }
 
-//        isWaitingForAck=false;
+                    if(isWaitingForAck==false)
+                    {
+                        return;
+                    }
 
+                    SendPacket(packet);
+                }
+                isWaitingForAck=false;
+            }
+        });
+        repeater.start();
         return false;
     }
 
     @Override
     public void OnScheduleUpdate(ScheduleViewAdapter.ScheduleItem[] scheduleItems) {
-        synchronized (this) {
+//        synchronized (this) {
             MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE,scheduleItems).sendToTarget();
-        }
+//        }
     }
 
     @Override
     public void OnAcknowledged(int packetID) {
-        synchronized (this) {
-            if(packetID==currentPacketID)
-            {
-                isWaitingForAck=false;
-            }
+        if (packetID == currentPacketID) {
+            isWaitingForAck = false;
         }
     }
 

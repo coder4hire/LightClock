@@ -1,5 +1,8 @@
 package com.lightclockcontrol.gss;
 
+import android.os.Trace;
+import android.util.Log;
+
 import java.io.ByteArrayOutputStream;
 import java.sql.Time;
 import java.util.ArrayList;
@@ -8,11 +11,15 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 enum PacketTypes {
-    NotReady(-2),
-    Error(-1),
     Unknown(0),
     ScheduleUpdate(1),
-    ScheduleRecv(2);
+    GetSchedule(2),
+    SetTime(3),
+    GetTime(4),
+    StopAlarm(5),
+    SimpleAck(0x40),
+    ScheduleRecv(0x41),
+    GetTimeRecv(0x44);
 
     private int value;
     private PacketTypes(int value) {
@@ -107,19 +114,22 @@ public class BTPacketFactory {
         WriteToArray(item.soundEnabledTime);
         WriteToArray(item.dayOfWeekMask);
         bytesArray.set(10, (byte) (bytesArray.size() - headerSize)); // Setting size, payload only
-        WriteToArray(CalcCRC());
+        int crc = CalcCRC();
+        Log.d("CalcCRC", Integer.toHexString(crc));
+        WriteToArray(crc);
         return Obj2BytesArray(bytesArray.toArray());
     }
 
     public int ParsePacket(byte[] data,int awaitingID, IOnReceiveAction actionTarget)
     {
         if(data.length<headerSize) {
-            return PacketTypes.NotReady.getValue();
+            return 0;
         }
         // Check preamble
         if(ReadIntFromArray(data,0)!=(int)0xBEEF115E)
         {
-            return 0;
+            // If packet with worng preamble was given at this stage - something has gone wrong, we have to clean up whole buffer
+            return data.length;
         }
 
         int packetID = ReadIntFromArray(data,4);
@@ -192,6 +202,7 @@ public class BTPacketFactory {
         for (int i=0;i<bytes.length && i<len; i++) {
             checksum.update(bytes[i]);
         }
+
         // get the current checksum value
         return (int)checksum.getValue();
 

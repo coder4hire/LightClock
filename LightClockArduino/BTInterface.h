@@ -8,8 +8,14 @@
 enum EPacketType
 {
 	PACK_Unknown = 0,
-	PACK_ScheduleUpdate,
-	PACK_ScheduleRecv
+	PACK_ScheduleUpdate=1,
+	PACK_GetSchedule=2,
+	PACK_SetTime=3,
+	PACK_GetTime=4,
+	PACK_StopAlarm=5,
+	PACK_SimpleAck=0x40,
+	PACK_ScheduleRecv=0x41,
+	PACK_GetTimeRecv=0x44
 };
 
 struct BTPacketHeader
@@ -42,6 +48,8 @@ public:
 	~CBTInterface();
 	void Init();
 
+	uint32_t CmdBufCRC32(size_t len);
+
 	uint32_t CRC32(const uint8_t * buf, size_t len, uint32_t crc=0);
 	bool IsConnected;
 	bool SendConfig(CBoardConfig * pConfig);
@@ -55,8 +63,16 @@ protected:
 
 	NeoSWSerial BTSerial;
 	uint8_t cmdBuffer[CMD_MAX_SIZE];
+	int cmdHeadIndex;
+	int cmdTailIndex;
+	int GetCmdBufLength() 
+	{
+		return cmdTailIndex >= cmdHeadIndex ? cmdTailIndex - cmdHeadIndex : CMD_MAX_SIZE - cmdHeadIndex + cmdTailIndex;
+	}
+	uint32_t ReadCmdBufferULong(int offset);
+	uint16_t ReadCmdBufferUShort(int offset);
+
 	uint8_t rcvdCmd[CMD_MAX_SIZE];
-	unsigned short cmdBufLength;
 
 	static void HandleBTChar(uint8_t c);
 	void OnBTCharReceived(uint8_t c);

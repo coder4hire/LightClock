@@ -10,10 +10,11 @@
 CBTInterface CBTInterface::Inst;
 
 CBTInterface::CBTInterface() : 
-	BTSerial(PIN_A3, 2), // RX | TX
-	cmdBufLength(0)
+	BTSerial(PIN_A3, 2) // RX | TX
 {
 	rcvdCmd[0] = 0;
+	cmdHeadIndex=0;
+	cmdTailIndex=0;
 }
 
 CBTInterface::~CBTInterface()
@@ -28,6 +29,23 @@ void CBTInterface::Init()
 	BTSerial.attachInterrupt(HandleBTChar);
 	BTSerial.listen();
 }
+
+uint32_t CBTInterface::CmdBufCRC32(size_t len)
+{
+	uint32_t crc = 0;
+	int k;
+	int idx = cmdHeadIndex;
+
+	crc = ~crc;
+	while (len--) {
+		crc ^= cmdBuffer[idx];
+		idx = (idx + 1) % CMD_MAX_SIZE;
+		for (k = 0; k < 8; k++)
+			crc = crc & 1 ? (crc >> 1) ^ POLY : crc >> 1;
+	}
+	return ~crc;
+}
+
 
 uint32_t CBTInterface::CRC32(const uint8_t *buf, size_t len, uint32_t crc)
 {
@@ -49,20 +67,29 @@ void CBTInterface::HandleBTChar(uint8_t c)
 
 void CBTInterface::OnBTCharReceived(uint8_t c)
 {
-	if(*rcvdCmd)
+	//if(*rcvdCmd)
+	//{
+	//	// If command is complete, just skip all other symbols until we confirm receive and clean up the buffer;
+	//	return;
+	//}
+	if (GetCmdBufLength() == CMD_MAX_SIZE-1)
 	{
-		// If command is complete, just skip all other symbols until we confirm receive and clean up the buffer;
-		return;
-	}
-	if (cmdBufLength >= CMD_MAX_SIZE)
-	{
-		cmdBufLength = 0;
+		Serial.println("!!! Overflow");
+		if (!*rcvdCmd)
+		{
+			// clean up buffer only if there's no pending command
+			cmdHeadIndex = 0;
+			cmdTailIndex = 0;
+		}
+		else
+		{
+			return;
+		}
 	}
 
-	// TODO: add check for start sequence
 	// Filling in buffer;
-	cmdBuffer[cmdBufLength] = c;
-	cmdBufLength++;
+	cmdBuffer[cmdTailIndex] = c;
+	cmdTailIndex = (cmdTailIndex + 1) % CMD_MAX_SIZE;
 }
 
 void CBTInterface::ProcessBTCommands()
@@ -74,7 +101,7 @@ void CBTInterface::ProcessBTCommands()
 		switch (pHeader->PacketType)
 		{
 		case PACK_ScheduleUpdate:
-			OnScheduleUpdate(pHeader, cmdBuffer + sizeof(BTPacketHeader));
+			OnScheduleUpdate(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
 		}
 		rcvdCmd[0] = 0;
@@ -91,63 +118,81 @@ bool CBTInterface::CheckForCompleteCommand()
 	}
 
 	bool retVal = false;
-	if (cmdBufLength >= sizeof(BTPacketHeader))
+	if (GetCmdBufLength() >= sizeof(BTPacketHeader))
 	{
-		BTPacketHeader* pHeader = (BTPacketHeader*)cmdBuffer;
-		if (pHeader->Preamble != 0xBEEF115E)
+		if (ReadCmdBufferULong(0) != 0xBEEF115E)
 		{
 			// Look for preamble in buffer
-			int i = 0;
-			for (; i < cmdBufLength - sizeof(uint32_t);i++)
+			bool isFound = false;
+			for (int i=0; i < GetCmdBufLength() - sizeof(uint32_t);i++)
 			{
-				if (*(uint32_t*)(cmdBuffer + i) == 0xBEEF115E)
+				if (ReadCmdBufferULong(i) == 0xBEEF115E)
 				{
-					cmdBufLength -= i;
-					memmove(cmdBuffer, cmdBuffer + i, cmdBufLength);
+					cmdHeadIndex = (cmdHeadIndex+i)%CMD_MAX_SIZE;
+					isFound = true;
 					break;
 				}
 			}
-			if (i == cmdBufLength - sizeof(uint32_t))
+			if (!isFound)
 			{
-				// Premble was not found
+				// Preamble was not found
 				return false;
 			}
 		}
 
-		uint32_t fullPacketLength = pHeader->PayloadLength + sizeof(BTPacketHeader) + sizeof(uint32_t);
-		if (cmdBufLength >= fullPacketLength)
+		// Lenght might have been changed after preamble search
+		if (GetCmdBufLength() < sizeof(BTPacketHeader))
 		{
-			for (int j = 0; j < cmdBufLength; j++)
-			{
-				Serial.print(cmdBuffer[j], 16);
-				Serial.print(" ");
-			}
-			uint32_t storedCRC32 = *(uint32_t*)(cmdBuffer + pHeader->PayloadLength + sizeof(BTPacketHeader));
-			if (CRC32(cmdBuffer, pHeader->PayloadLength + sizeof(BTPacketHeader)) == storedCRC32)
+			return false;
+		}
+
+		for (int j = cmdHeadIndex; j != cmdTailIndex; j = (j + 1) % CMD_MAX_SIZE)
+		{
+			Serial.print(cmdBuffer[j], 16);
+			Serial.print(" ");
+		}
+		Serial.println("");
+
+		uint16_t payloadLength = ReadCmdBufferUShort(10);
+		uint32_t fullPacketLength = payloadLength + sizeof(BTPacketHeader) + sizeof(uint32_t);
+		if (GetCmdBufLength() >= fullPacketLength)
+		{
+			Serial.println("Complete");
+			uint32_t storedCRC32 = ReadCmdBufferULong(payloadLength + sizeof(BTPacketHeader));
+			uint32_t calcCRC32 = CmdBufCRC32(payloadLength + sizeof(BTPacketHeader));
+			if (calcCRC32 == storedCRC32)
 			{
 				Serial.println("!!!Got packet, good CRC");
-				memcpy(rcvdCmd, cmdBuffer, fullPacketLength);
+				int endOfPacketIdx = (cmdHeadIndex + fullPacketLength) % CMD_MAX_SIZE;
+				if (endOfPacketIdx > cmdHeadIndex)
+				{
+					memcpy(rcvdCmd, cmdBuffer+cmdHeadIndex, fullPacketLength);
+				}
+				else
+				{
+					memcpy(rcvdCmd, cmdBuffer + cmdHeadIndex, CMD_MAX_SIZE - cmdHeadIndex);
+					memcpy(rcvdCmd+(CMD_MAX_SIZE - cmdHeadIndex), cmdBuffer, endOfPacketIdx);
+				}
 				retVal = true;
 			}
 			else
 			{
 				Serial.println("!!!Got packet, bad CRC");
-				Serial.println(storedCRC32,16);
-				Serial.println(CRC32(cmdBuffer, pHeader->PayloadLength+ sizeof(BTPacketHeader)),16);
+				Serial.println(storedCRC32, 16);
+				Serial.println(calcCRC32, 16);
+				fullPacketLength = 4;
 			}
 
-			// Removing packet, no matter whether it was good or bad
-			if (fullPacketLength < cmdBufLength)
+			// In case of good packet - removing it, we know its lenght is OK
+			// In case of bad packet - remove only first 4 bytes (preamble), the rest will be removed while checking for next data chunk
+			if (fullPacketLength < GetCmdBufLength())
 			{
-				cmdBufLength -= fullPacketLength;
-				if (cmdBufLength)
-				{
-					memmove(cmdBuffer, cmdBuffer + fullPacketLength, cmdBufLength);
-				}
+				cmdHeadIndex = (cmdHeadIndex + fullPacketLength) % CMD_MAX_SIZE;
 			}
 			else
 			{
-				cmdBufLength = 0;
+				cmdHeadIndex = 0;
+				cmdTailIndex = 0;
 			}
 		}
 	}
@@ -179,10 +224,9 @@ bool CBTInterface::SendSchedule(uint32_t packetID)
 	((BTPacketHeader*)buffer)->PayloadLength = sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM;
 	*(uint32_t*)(buffer+sizeof(BTPacketHeader)+sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM) = CRC32((const uint8_t*)buffer, sizeof(BTPacketHeader) + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM);
 
-	Serial.print(((BTPacketHeader*)buffer)->PayloadLength);
 	Serial.println("...Sending...");
-	BTSerial.write(buffer, sizeof(buffer));
-	BTSerial.flush();
+	uint8_t written = BTSerial.write(buffer, sizeof(buffer));
+	Serial.println(written);
 	return true;
 }
 
@@ -195,4 +239,31 @@ bool CBTInterface::SendConfig(CBoardConfig * pConfig)
 bool CBTInterface::LoadConfig(CBoardConfig * pConfig)
 {
 	return false;
+}
+
+uint32_t CBTInterface::ReadCmdBufferULong(int offset)
+{
+	int startIndex = (cmdHeadIndex + offset) % CMD_MAX_SIZE;
+	if (startIndex <= CMD_MAX_SIZE - 4)
+	{
+		return *(uint32_t*)(cmdBuffer + startIndex);
+	}
+	else
+	{
+		return ((uint32_t)cmdBuffer[startIndex]) | (((uint32_t)cmdBuffer[(startIndex+1)%CMD_MAX_SIZE])<<8) |
+			(((uint32_t)cmdBuffer[(startIndex + 2) % CMD_MAX_SIZE]) << 16) | (((uint32_t)cmdBuffer[(startIndex + 3) % CMD_MAX_SIZE]) << 24);
+	}
+}
+
+uint16_t CBTInterface::ReadCmdBufferUShort(int offset)
+{
+	int startIndex = (cmdHeadIndex + offset) % CMD_MAX_SIZE;
+	if (startIndex <= CMD_MAX_SIZE - 3)
+	{
+		return *(uint16_t*)(cmdBuffer + startIndex);
+	}
+	else
+	{
+		return ((uint16_t)cmdBuffer[startIndex]) | (((uint16_t)cmdBuffer[(startIndex + 1) % CMD_MAX_SIZE]) << 8);
+	}
 }
