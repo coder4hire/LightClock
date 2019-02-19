@@ -81,6 +81,12 @@ public class BluetoothService {
         return mState;
     }
 
+    private BluetoothSPP.OnDataReceivedListener mDataReceivedListener = null;
+
+    public void setOnDataReceivedListener (BluetoothSPP.OnDataReceivedListener listener) {
+        mDataReceivedListener = listener;
+    }
+
     // Start the chat service. Specifically start AcceptThread to begin a
     // session in listening (server) mode. Called by the Activity onResume() 
     public synchronized void start(boolean isAndroid) {
@@ -356,7 +362,11 @@ public class BluetoothService {
             while (true) {
                 try {
                     int data = mmInStream.read();
-                    mHandler.obtainMessage(BluetoothState.MESSAGE_READ, data, -1).sendToTarget();
+                    //mHandler.obtainMessage(BluetoothState.MESSAGE_READ, data, -1).sendToTarget();
+                    if(mDataReceivedListener!=null)
+                    {
+                        mDataReceivedListener.onDataReceived((byte)data);
+                    }
                 } catch (IOException e) {
                     connectionLost();
                     // Start the service over to restart listening mode

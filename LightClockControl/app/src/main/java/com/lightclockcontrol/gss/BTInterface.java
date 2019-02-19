@@ -6,6 +6,10 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import app.akexorcist.bluetotohspp.library.BluetoothSPP;
 import app.akexorcist.bluetotohspp.library.BluetoothState;
@@ -15,22 +19,21 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
     private BluetoothSPP bt;
     private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     private BTPacketFactory packetFactory = new BTPacketFactory();
-    private boolean isWaitingForAck = false;
 
     private int currentPacketID = 1;
-    static private BTInterface instance=null;
+    static private BTInterface instance = null;
 
-    static public BTInterface GetInstance()
-    {
-        if(instance==null)
-        {
-           instance = new BTInterface();
+    private final Lock lock = new ReentrantLock();
+    private final Condition acknowledged = lock.newCondition();
+
+    static public BTInterface GetInstance() {
+        if (instance == null) {
+            instance = new BTInterface();
         }
         return instance;
     }
 
-    private BTInterface()
-    {
+    private BTInterface() {
         Begin(App.getContext());
     }
 
@@ -55,8 +58,6 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
                     Log.i("Check", "State : None");
             }
         });
-
-        bt.setOnDataReceivedListener(this);
 
         bt.setBluetoothConnectionListener(new BluetoothSPP.BluetoothConnectionListener() {
             public void onDeviceConnected(String name, String address) {
@@ -97,6 +98,8 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         }
 
         bt.autoConnect("LightClock");
+
+        bt.setOnDataReceivedListener(this);
     }
 
     public void close() throws Exception {
@@ -104,16 +107,17 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
     }
 
     @Override
+    // This function is called from bluetooth service thread directly
     public void onDataReceived(byte data) {
         buffer.write(data);
         byte[] bufferedData = buffer.toByteArray();
 
         // If buffered data does not start from preamble, look for it in the stream
-        if(bufferedData.length>=BTPacketFactory.headerSize) {
-            if (bufferedData[0] != (byte)0x5E || bufferedData[1] != (byte)0x11 || bufferedData[2] != (byte)0xEF || bufferedData[3] != (byte)0xBE) {
+        if (bufferedData.length >= BTPacketFactory.headerSize) {
+            if (bufferedData[0] != (byte) 0x5E || bufferedData[1] != (byte) 0x11 || bufferedData[2] != (byte) 0xEF || bufferedData[3] != (byte) 0xBE) {
                 int i = 0;
                 for (i = 0; i < bufferedData.length - 4; i++) {
-                    if (bufferedData[i] == (byte)0x5E && bufferedData[i + 1] == (byte)0x11 && bufferedData[i + 2] == (byte)0xEF && bufferedData[i + 3] == (byte)0xBE) {
+                    if (bufferedData[i] == (byte) 0x5E && bufferedData[i + 1] == (byte) 0x11 && bufferedData[i + 2] == (byte) 0xEF && bufferedData[i + 3] == (byte) 0xBE) {
                         byte[] bufferedData2 = bufferedData.clone();
                         buffer.reset();
                         buffer.write(bufferedData2, i, bufferedData2.length - i);
@@ -129,7 +133,7 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
             int bytesToRemove = packetFactory.ParsePacket(bufferedData, currentPacketID, this);
 
-            if(bytesToRemove>0) {
+            if (bytesToRemove > 0) {
                 if (bytesToRemove < bufferedData.length) {
                     byte[] bufferedData2 = bufferedData.clone();
                     buffer.reset();
@@ -141,72 +145,60 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         }
     }
 
-    private void UpdatePacketID()
-    {
+    private void UpdatePacketID() {
         currentPacketID++;
-        if(currentPacketID==Integer.MAX_VALUE)
-        {
-            currentPacketID=1; // 0 is reserved for broadcasts
+        if (currentPacketID == Integer.MAX_VALUE) {
+            currentPacketID = 1; // 0 is reserved for broadcasts
         }
     }
 
-    public boolean SendPacket(byte[] data)
-    {
+    public boolean SendPacket(byte[] data) {
         byte[] dummy = new byte[4];
         dummy[0] = dummy[1] = dummy[2] = dummy[3] = 0;
 
         bt.send(data, false);
         bt.send(dummy, false);
 
-        isWaitingForAck=true;
         return true;
     }
 
-    public boolean SendScheduleItemUpdate(ScheduleViewAdapter.ScheduleItem item)
-    {
+    public boolean SendScheduleItemUpdate(ScheduleViewAdapter.ScheduleItem item) {
         UpdatePacketID();
-        final byte[] packet = packetFactory.CreateScheduleUpdatePacket(currentPacketID,item);
-        SendPacket(packet);
+        final byte[] packet = packetFactory.CreateScheduleUpdatePacket(currentPacketID, item);
 
-        Thread repeater = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for(int i=0;i<10;i++) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                    }
-
-                    if(isWaitingForAck==false)
-                    {
-                        return;
-                    }
-
-                    SendPacket(packet);
+        try {
+            for (int i = 0; i < 10; i++) {
+                SendPacket(packet);
+                lock.lock();
+                if (acknowledged.await(1000, TimeUnit.MILLISECONDS)) {
+                    lock.unlock();
+                    return true;
                 }
-                isWaitingForAck=false;
             }
-        });
-        repeater.start();
+        } catch (InterruptedException e) {
+            lock.unlock();
+        }
+
         return false;
     }
 
     @Override
     public void OnScheduleUpdate(ScheduleViewAdapter.ScheduleItem[] scheduleItems) {
 //        synchronized (this) {
-            MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE,scheduleItems).sendToTarget();
+        MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE, scheduleItems).sendToTarget();
 //        }
     }
 
     @Override
     public void OnAcknowledged(int packetID) {
         if (packetID == currentPacketID) {
-            isWaitingForAck = false;
+            lock.lock();
+            acknowledged.signalAll();
+            lock.unlock();
         }
     }
 
-    public BluetoothSPP GetSPP()
-    {
+    public BluetoothSPP GetSPP() {
         return bt;
     }
 }

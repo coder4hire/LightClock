@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import app.akexorcist.bluetotohspp.library.BluetoothState;
@@ -22,6 +23,8 @@ import app.akexorcist.bluetotohspp.library.DeviceList;
  */
 public class SettingsFragment extends Fragment {
 
+    Button btnSync;
+    TextView txtCurTime;
     public SettingsFragment() {
         // Required empty public constructor
     }
@@ -37,8 +40,10 @@ public class SettingsFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-
         Button btnConnect = (Button)view.findViewById(R.id.btnConnect);
+        btnSync = (Button) view.findViewById(R.id.btnSyncClock);
+        txtCurTime = (TextView) view.findViewById(R.id.txtCurrentTime);
+
         btnConnect.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
                 if(BTInterface.GetInstance().GetSPP().getServiceState() == BluetoothState.STATE_CONNECTED) {

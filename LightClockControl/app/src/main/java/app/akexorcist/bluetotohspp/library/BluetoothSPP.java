@@ -33,7 +33,6 @@ import android.widget.Toast;
 public class BluetoothSPP {
     // Listener for Bluetooth Status & Connection
     private BluetoothStateListener mBluetoothStateListener = null;
-    private OnDataReceivedListener mDataReceivedListener = null;
     private BluetoothConnectionListener mBluetoothConnectionListener = null;
     private AutoConnectionListener mAutoConnectionListener = null;
     
@@ -61,6 +60,8 @@ public class BluetoothSPP {
     
     private BluetoothConnectionListener bcl;
     private int c = 0;
+
+    OnDataReceivedListener dataReceivedListener = null;
     
     public BluetoothSPP(Context context) {
         mContext = context;
@@ -122,6 +123,7 @@ public class BluetoothSPP {
     
     public void setupService() {
         mChatService = new BluetoothService(mContext, mHandler);
+        mChatService.setOnDataReceivedListener(dataReceivedListener);
     }
     
     public BluetoothAdapter getBluetoothAdapter() {
@@ -172,10 +174,10 @@ public class BluetoothSPP {
             switch (msg.what) {
             case BluetoothState.MESSAGE_WRITE:
                 break;
-            case BluetoothState.MESSAGE_READ:
-                if(mDataReceivedListener != null)
-                    mDataReceivedListener.onDataReceived((byte)msg.arg1);
-                break;
+//            case BluetoothState.MESSAGE_READ:
+//                if(mDataReceivedListener != null)
+//                    mDataReceivedListener.onDataReceived((byte)msg.arg1);
+//                break;
             case BluetoothState.MESSAGE_DEVICE_NAME:
                 mDeviceName = msg.getData().getString(BluetoothState.DEVICE_NAME);
                 mDeviceAddress = msg.getData().getString(BluetoothState.DEVICE_ADDRESS);
@@ -245,9 +247,13 @@ public class BluetoothSPP {
     public void setBluetoothStateListener (BluetoothStateListener listener) {
         mBluetoothStateListener = listener;
     }
-    
+
     public void setOnDataReceivedListener (OnDataReceivedListener listener) {
-        mDataReceivedListener = listener;
+        dataReceivedListener = listener;
+        if(mChatService!=null)
+        {
+            mChatService.setOnDataReceivedListener(listener);
+        }
     }
     
     public void setBluetoothConnectionListener (BluetoothConnectionListener listener) {
