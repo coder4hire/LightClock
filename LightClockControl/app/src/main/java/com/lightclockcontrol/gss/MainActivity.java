@@ -11,13 +11,17 @@ import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
+import java.util.Date;
+
 public class MainActivity extends AppCompatActivity {
 
     private AlarmsFragment alarmsFragment = new AlarmsFragment();
     private ManualFragment manualFragment = new ManualFragment();
     private SettingsFragment settingsFragment = new SettingsFragment();
 
-    public static final int MSG_UPDATE_SCHEDULE = 100;
+    public static final int MSG_UPDATE_SCHEDULE = 0x41;
+    public static final int MSG_UPDATE_CLOCK_TIME = 0x44;
+    public static final int MSG_BT_CONNECTED = 0x100;
 
     static public Handler uiHandler;
 
@@ -63,8 +67,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                if (msg.what == MSG_UPDATE_SCHEDULE) {
-                    alarmsFragment.UpdateSchedule((ScheduleViewAdapter.ScheduleItem[])msg.obj);
+                switch (msg.what) {
+                    case MSG_UPDATE_SCHEDULE:
+                        alarmsFragment.UpdateSchedule((ScheduleViewAdapter.ScheduleItem[]) msg.obj);
+                        break;
+                    case MSG_UPDATE_CLOCK_TIME:
+                        Date dateTime = new Date(msg.arg1 < 0 ? (msg.arg1 + 0x1000000l) * 1000 : ((long) msg.arg1) * 1000);
+                        settingsFragment.ShowClockTime(dateTime);
+                        break;
+                    case MSG_BT_CONNECTED:
+                        settingsFragment.ShowBTDeviceName(msg.obj.toString());
                 }
             }
         };

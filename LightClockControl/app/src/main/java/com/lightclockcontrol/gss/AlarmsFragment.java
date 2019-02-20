@@ -75,6 +75,11 @@ public class AlarmsFragment extends Fragment {
                 i.putExtra("EditingItem", item);
                 startActivityForResult(i,0);
             }
+
+            @Override
+            public void onCheckedStateChanged(ScheduleViewAdapter.ScheduleItem item) {
+                BTInterface.GetInstance().SendEnableScheduleItem(item.id,item.isEnabled);
+            }
         });
 
         //        if (getArguments() != null) {
@@ -116,5 +121,12 @@ public class AlarmsFragment extends Fragment {
         for(ScheduleViewAdapter.ScheduleItem item : newItems) {
             adapter.UpdateScheduleItem(item);
         }
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        BTInterface.GetInstance().SendGetSchedule();
     }
 }

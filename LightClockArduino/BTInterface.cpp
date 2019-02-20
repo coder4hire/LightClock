@@ -1,5 +1,6 @@
 #include "BTInterface.h"
 #include "Scheduler.h"
+#include "Main.h"
 
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
 //#define POLY 0x82f63b78
@@ -8,6 +9,8 @@
  #define POLY 0xedb88320 
 
 CBTInterface CBTInterface::Inst;
+
+#define BUF_OVERHEAD (sizeof(BTPacketHeader) + sizeof(uint32_t))
 
 CBTInterface::CBTInterface() : 
 	BTSerial(PIN_A3, 2) // RX | TX
@@ -103,9 +106,22 @@ void CBTInterface::ProcessBTCommands()
 		case PACK_ScheduleUpdate:
 			OnScheduleUpdate(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
+		case PACK_GetSchedule:
+			SendSchedule(pHeader->PacketID);
+			break;
+		case PACK_GetTime:
+			SendTime(pHeader->PacketID);
+			break;
+		case PACK_SetTime:
+			OnSetTime(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			break;
+		case PACK_EnableScheduleItem:
+			OnEnableScheduleItem(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			break;
 		}
-		rcvdCmd[0] = 0;
 	}
+
+	rcvdCmd[0] = 0;
 }
 
 bool CBTInterface::CheckForCompleteCommand()
@@ -211,23 +227,59 @@ void CBTInterface::OnScheduleUpdate(BTPacketHeader* pHeader, void* pPayload)
 	}
 }
 
+void CBTInterface::OnSetTime(BTPacketHeader* pHeader, void* pPayload)
+{
+	if (pHeader->PayloadLength == sizeof(uint32_t))
+	{
+		time_t newTime = *(uint32_t*)pPayload;
+		CMain::Inst.RTC.adjust(DateTime(newTime));
+
+		// Send back reply
+		SendTime(pHeader->PacketID);
+	}
+}
+
+void CBTInterface::OnEnableScheduleItem(BTPacketHeader* pHeader, void* pPayload)
+{
+	uint8_t* data = (uint8_t*)pPayload;
+	CScheduler::Inst.EnableScheduleItem(data[0], data[1]);
+	SendSchedule(pHeader->PacketID);
+}
+
+
 bool CBTInterface::SendSchedule(uint32_t packetID)
 {
-	uint8_t buffer[sizeof(BTPacketHeader) + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM + sizeof(uint32_t)];
-	*(BTPacketHeader*)buffer = BTPacketHeader(PACK_ScheduleRecv, packetID);
+	uint8_t buffer[BUF_OVERHEAD + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM];
 	CScheduleItem* payload = (CScheduleItem*)(buffer + sizeof(BTPacketHeader));
 	for (int i = 0; i < SCHEDULE_ITEMS_NUM; i++)
 	{
 		payload[i] = CScheduler::Inst.Schedule[i];
 	}
+	size_t written = FinalizePacketAndWrite(buffer, PACK_ScheduleRecv, packetID, sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM);
+	return written>0;
+}
 
-	((BTPacketHeader*)buffer)->PayloadLength = sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM;
-	*(uint32_t*)(buffer+sizeof(BTPacketHeader)+sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM) = CRC32((const uint8_t*)buffer, sizeof(BTPacketHeader) + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM);
+bool CBTInterface::SendTime(uint32_t packetID)
+{
+	uint8_t buffer[BUF_OVERHEAD + sizeof(uint32_t)];
+	*(uint32_t*)(buffer + sizeof(BTPacketHeader)) = CMain::Inst.RTC.now().unixtime();
+	size_t written = FinalizePacketAndWrite(buffer, PACK_TimeRecv, packetID, sizeof(uint32_t));
+	return written > 0;
+}
 
-	Serial.println("...Sending...");
-	uint8_t written = BTSerial.write(buffer, sizeof(buffer));
-	Serial.println(written);
-	return true;
+bool CBTInterface::SendSimpleAck(uint32_t packetID)
+{
+	uint8_t buffer[BUF_OVERHEAD];
+	size_t written = FinalizePacketAndWrite(buffer, PACK_SimpleAck, packetID, 0);
+	return written > 0;
+}
+
+size_t CBTInterface::FinalizePacketAndWrite(uint8_t* buffer,EPacketType packetType, uint32_t packetID, uint16_t payloadLength)
+{
+	*(BTPacketHeader*)buffer = BTPacketHeader(packetType, packetID);
+	((BTPacketHeader*)buffer)->PayloadLength = payloadLength;
+	*(uint32_t*)(buffer + sizeof(BTPacketHeader) + payloadLength) = CRC32((const uint8_t*)buffer, sizeof(BTPacketHeader) + payloadLength);
+	return BTSerial.write(buffer, BUF_OVERHEAD + payloadLength);
 }
 
 

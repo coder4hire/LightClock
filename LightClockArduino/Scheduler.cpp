@@ -1,14 +1,22 @@
 #include "Scheduler.h"
 #include <time.h>
 #include "Main.h"
+#include <EEPROM.h>
 
 CScheduler CScheduler::Inst;
 
 CScheduler::CScheduler()
 {
+	LoadItemsFromEEPROM();
+
+	// Check for integrity
 	for (int i = 0; i < SCHEDULE_ITEMS_NUM; i++)
 	{
-		Schedule[i].ID = i;
+		if (Schedule[i].ID != i)
+		{
+			Schedule[i].ID = i;
+			StoreItemToEEPROM(i);
+		}
 	}
 
 	currentEffectScheduleIdx = -1;
@@ -30,13 +38,21 @@ bool CScheduler::UpdateScheduleItem(const CScheduleItem & item)
 	{
 		if (Schedule[i].ID == item.ID)
 		{
-			Serial.println("Got item!!!");
-			Serial.println(item.ExecTime);
 			Schedule[i] = item;
+			StoreItemToEEPROM(i);
 			return true;
 		}
 	}
 	return false;
+}
+
+bool CScheduler::EnableScheduleItem(uint8_t index, bool isEnabled)
+{
+	if (index < SCHEDULE_ITEMS_NUM && Schedule[index].ID == index)
+	{
+		Schedule[index].IsEnabled = isEnabled;
+		StoreItemToEEPROM(index);
+	}
 }
 
 void CScheduler::OnTimeTick()
@@ -79,5 +95,20 @@ void CScheduler::TestRunEffect(CScheduleItem::EEffectType effect)
 void CScheduler::StopEffects()
 {
 	currectEffect.Stop();
+}
+
+void CScheduler::StoreItemToEEPROM(int index)
+{
+	if (index < SCHEDULE_ITEMS_NUM)
+	{
+		int offset = sizeof(CScheduleItem)*index;
+		uint8_t* pItem = (uint8_t*)(Schedule+offset);
+		eeprom_update_block(pItem, (void *)offset, sizeof(CScheduleItem));
+	}
+}
+
+void CScheduler::LoadItemsFromEEPROM()
+{
+	eeprom_read_block(Schedule, (void *)0, SCHEDULE_ITEMS_NUM*sizeof(CScheduleItem));
 }
 

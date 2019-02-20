@@ -13,9 +13,10 @@ enum EPacketType
 	PACK_SetTime=3,
 	PACK_GetTime=4,
 	PACK_StopAlarm=5,
+	PACK_EnableScheduleItem = 6,
 	PACK_SimpleAck=0x40,
 	PACK_ScheduleRecv=0x41,
-	PACK_GetTimeRecv=0x44
+	PACK_TimeRecv=0x44
 };
 
 struct BTPacketHeader
@@ -78,6 +79,13 @@ protected:
 	void OnBTCharReceived(uint8_t c);
 
 	bool CheckForCompleteCommand();
+
 	void OnScheduleUpdate(BTPacketHeader* pHeader, void* pPayload);
+	void OnSetTime(BTPacketHeader * pHeader, void * pPayload);
+	void OnEnableScheduleItem(BTPacketHeader * pHeader, void * pPayload);
+
+	size_t FinalizePacketAndWrite(uint8_t* buffer, EPacketType packetType, uint32_t packetID, uint16_t payloadLength);
 	bool SendSchedule(uint32_t packetID);
+	bool SendTime(uint32_t packetID);
+	bool SendSimpleAck(uint32_t packetID);
 };

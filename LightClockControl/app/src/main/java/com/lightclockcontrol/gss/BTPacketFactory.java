@@ -3,10 +3,8 @@ package com.lightclockcontrol.gss;
 import android.os.Trace;
 import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
-import java.sql.Time;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -17,12 +15,13 @@ enum PacketTypes {
     SetTime(3),
     GetTime(4),
     StopAlarm(5),
+    EnableScheduleItem(6),
     SimpleAck(0x40),
     ScheduleRecv(0x41),
-    GetTimeRecv(0x44);
+    TimeRecv(0x44);
 
     private int value;
-    private PacketTypes(int value) {
+    PacketTypes(int value) {
         this.value = value;
     }
 
@@ -46,8 +45,16 @@ enum PacketTypes {
 public class BTPacketFactory {
     ArrayList<Byte> bytesArray = new ArrayList<Byte>();
 
-    static public final int headerSize = 12;
-    static public final int crcSize = 4;
+    static public final int HeaderSize = 12;
+    static public final int CRCSize = 4;
+    private int currentPacketID = 1;
+
+    private void UpdatePacketID() {
+        currentPacketID++;
+        if (currentPacketID == Integer.MAX_VALUE) {
+            currentPacketID = 1; // 0 is reserved for broadcasts
+        }
+    }
 
     protected void WriteToArray(long data) {
         WriteToArray((int) (data & 0xFFFFFFFF));
@@ -73,21 +80,27 @@ public class BTPacketFactory {
         bytesArray.add(data ? (byte) 1 : (byte) 0);
     }
 
-    protected int ReadIntFromArray(byte[] arr, int offset)
+    static public long ReadLongFromArray(byte[] arr, int offset)
     {
-        return arr[offset]&0xFF | ((arr[offset+1]<<8)&0xFF00) | ((arr[offset+2]<<16)&0xFF0000) | (( arr[offset+3]<<24)&0xFF000000);
+        return (arr[offset] & 0xFFl) | ((arr[offset + 1] << 8) & 0xFF00l) | ((arr[offset + 2] << 16) & 0xFF0000l) | ((arr[offset + 3] << 24) & 0xFF000000l) |
+                ((arr[offset + 4] << 32) & 0xFF00000000l) | ((arr[offset + 5] << 40) & 0xFF0000000000l) | ((arr[offset + 6] << 48) & 0xFF000000000000l) | ((arr[offset + 7] << 56) & 0xFF00000000000000l);
     }
 
-    protected short ReadShortFromArray(byte[] arr, int offset)
+    static public int ReadIntFromArray(byte[] arr, int offset)
+    {
+        return (arr[offset]&0xFF) | ((arr[offset+1]<<8)&0xFF00) | ((arr[offset+2]<<16)&0xFF0000) | (( arr[offset+3]<<24)&0xFF000000);
+    }
+
+    static public short ReadShortFromArray(byte[] arr, int offset)
     {
         return (short)((arr[offset]&0xFF) | ((arr[offset+1]<<8)&0xFF00));
     }
 
-
-    protected void WriteHeader(int packetID,PacketTypes packetType) {
+    protected void WriteHeader(PacketTypes packetType) {
         bytesArray.clear();
+        UpdatePacketID();
         WriteToArray(0xBEEF115E);// Preamble
-        WriteToArray(packetID);
+        WriteToArray(currentPacketID);
         WriteToArray((short)packetType.getValue());
         WriteToArray((short) 0); // length
     }
@@ -102,8 +115,8 @@ public class BTPacketFactory {
         return arr;
     }
 
-    public byte[] CreateScheduleUpdatePacket(int packetID, ScheduleViewAdapter.ScheduleItem item) {
-        WriteHeader(packetID,PacketTypes.ScheduleUpdate);
+    public byte[] CreateScheduleUpdatePacket(ScheduleViewAdapter.ScheduleItem item) {
+        WriteHeader(PacketTypes.ScheduleUpdate);
         WriteToArray(item.id); // Schedule item ID
         WriteToArray(item.isEnabled);
         WriteToArray((int) item.execTime.getTime());
@@ -113,22 +126,47 @@ public class BTPacketFactory {
         WriteToArray(item.lightEnabledTime);
         WriteToArray(item.soundEnabledTime);
         WriteToArray(item.dayOfWeekMask);
-        bytesArray.set(10, (byte) (bytesArray.size() - headerSize)); // Setting size, payload only
+        bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
         int crc = CalcCRC();
-        Log.d("CalcCRC", Integer.toHexString(crc));
         WriteToArray(crc);
         return Obj2BytesArray(bytesArray.toArray());
     }
 
-    public int ParsePacket(byte[] data,int awaitingID, IOnReceiveAction actionTarget)
+    public byte[] CreateSimplePacket(PacketTypes type) {
+        WriteHeader(type);
+        int crc = CalcCRC();
+        WriteToArray(crc);
+        return Obj2BytesArray(bytesArray.toArray());
+    }
+
+    public byte[] CreateSetTimePacket(Date dateTime) {
+        WriteHeader(PacketTypes.SetTime);
+        WriteToArray((int)(dateTime.getTime()/1000));
+        bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
+        int crc = CalcCRC();
+        WriteToArray(crc);
+        return Obj2BytesArray(bytesArray.toArray());
+    }
+
+    public byte[] CreateEnableScheduleItemPacket(byte itemIndex,boolean isEnabled) {
+        WriteHeader(PacketTypes.EnableScheduleItem);
+        WriteToArray(itemIndex);
+        WriteToArray(isEnabled);
+        bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
+        int crc = CalcCRC();
+        WriteToArray(crc);
+        return Obj2BytesArray(bytesArray.toArray());
+    }
+
+    public int ParsePacket(byte[] data,int awaitingID, IOnAckCallback ackCallback)
     {
-        if(data.length<headerSize) {
+        if(data.length<HeaderSize) {
             return 0;
         }
         // Check preamble
         if(ReadIntFromArray(data,0)!=(int)0xBEEF115E)
         {
-            // If packet with worng preamble was given at this stage - something has gone wrong, we have to clean up whole buffer
+            // If packet with wrong preamble was given at this stage - something has gone wrong, we have to clean up whole buffer
             return data.length;
         }
 
@@ -137,21 +175,21 @@ public class BTPacketFactory {
         PacketTypes packetType = PacketTypes.fromValue((int)ReadShortFromArray(data,8));
 
         int payloadSize = ReadShortFromArray(data,10);
-        if(payloadSize+headerSize+crcSize>data.length)
+        if(payloadSize+HeaderSize+CRCSize>data.length)
         {
             return 0;
         }
-        int calculatedCRC = CalcCRC(data,payloadSize+headerSize);
+        int calculatedCRC = CalcCRC(data,payloadSize+HeaderSize);
 
-        if (calculatedCRC == ReadIntFromArray(data, headerSize + payloadSize)) {
+        if (calculatedCRC == ReadIntFromArray(data, HeaderSize + payloadSize)) {
 
-            if(actionTarget!=null) {
-                actionTarget.OnAcknowledged(packetID);
+            if(ackCallback!=null) {
+                ackCallback.OnAcknowledged(packetID);
             }
             switch (packetType) {
                 case ScheduleRecv:
                     if (awaitingID != packetID) {
-                        return payloadSize + headerSize + crcSize; // wrong packet ID for this type, skipt the packet
+                        return payloadSize + HeaderSize + CRCSize; // wrong packet ID for this type, skip the packet
                     }
 
                     int itemSize = 18;
@@ -160,7 +198,7 @@ public class BTPacketFactory {
 
                     for(int i=0;i<itemsCount;i++)
                     {
-                        int offset = headerSize+itemSize*i;
+                        int offset = HeaderSize+itemSize*i;
                         ScheduleViewAdapter.ScheduleItem item = new ScheduleViewAdapter.ScheduleItem(data[offset]);
                         item.isEnabled = data[offset+1]!=0;
                         item.execTime.setTime((long)ReadIntFromArray(data,offset+2)*1000l);
@@ -174,14 +212,19 @@ public class BTPacketFactory {
                         items[i]=item;
                     }
 
-                    if(actionTarget!=null) {
-                        actionTarget.OnScheduleUpdate(items);
-                    }
+                    MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE, items).sendToTarget();
                     break;
+                case TimeRecv:
+                    if (awaitingID != packetID) {
+                        return payloadSize + HeaderSize + CRCSize; // wrong packet ID for this type, skip the packet
+                    }
+                    int dateTime = ReadIntFromArray(data,HeaderSize);
+                    MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_CLOCK_TIME,dateTime,0).sendToTarget();
+
             }
         }
 
-        return payloadSize + headerSize + crcSize;
+        return payloadSize + HeaderSize + CRCSize;
     }
 
     private int CalcCRC() {
@@ -208,10 +251,8 @@ public class BTPacketFactory {
 
     }
 
-
-    public interface IOnReceiveAction
+    public interface IOnAckCallback
     {
-        void OnScheduleUpdate(ScheduleViewAdapter.ScheduleItem[] scheduleItems);
         void OnAcknowledged(int packetID);
     }
 }

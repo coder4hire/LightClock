@@ -85,6 +85,7 @@ public class BluetoothSPP {
     public interface AutoConnectionListener {
         public void onAutoConnectionStarted();
         public void onNewConnection(String name, String address);
+        public void onConnected(String name, String address);
     }
     
     public boolean isBluetoothAvailable() {
@@ -344,6 +345,8 @@ public class BluetoothSPP {
                 public void onDeviceConnected(String name, String address) {
                     bcl = null;
                     isAutoConnecting = false;
+                    if(mAutoConnectionListener != null)
+                        mAutoConnectionListener.onConnected(name,address);
                 }
     
                 public void onDeviceDisconnected() { }

@@ -12,6 +12,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import app.akexorcist.bluetotohspp.library.BluetoothState;
 import app.akexorcist.bluetotohspp.library.DeviceList;
 
@@ -24,7 +31,10 @@ import app.akexorcist.bluetotohspp.library.DeviceList;
 public class SettingsFragment extends Fragment {
 
     Button btnSync;
-    TextView txtCurTime;
+    TextView txtClockTime;
+    TextView txtConnectedDeviceName;
+    Timer timer = null;
+
     public SettingsFragment() {
         // Required empty public constructor
     }
@@ -42,7 +52,10 @@ public class SettingsFragment extends Fragment {
 
         Button btnConnect = (Button)view.findViewById(R.id.btnConnect);
         btnSync = (Button) view.findViewById(R.id.btnSyncClock);
-        txtCurTime = (TextView) view.findViewById(R.id.txtCurrentTime);
+        txtClockTime = (TextView) view.findViewById(R.id.txtClockTime);
+        txtConnectedDeviceName = (TextView)view.findViewById(R.id.txtConnectedDeviceName);
+
+        txtConnectedDeviceName.setText(BTInterface.GetInstance().GetConnectedDeviceName());
 
         btnConnect.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
@@ -54,7 +67,34 @@ public class SettingsFragment extends Fragment {
                 }
             }
         });
+
+        btnSync.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BTInterface.GetInstance().SendSetTime(Calendar.getInstance().getTime());
+            }
+        });
+
+        // Setting up timer
+        if(timer==null)
+        {
+            timer= new Timer();
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    BTInterface.GetInstance().SendGetTime();
+                }
+            },0,1000);
+        }
         return view;
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        timer.cancel();
+        timer=null;
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -72,4 +112,18 @@ public class SettingsFragment extends Fragment {
         }
     }
 
+    public void ShowClockTime(Date dateTime)
+    {
+        DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss\ndd.MM.yyyy");
+        if(txtClockTime!=null) {
+            txtClockTime.setText(dateFormat.format(dateTime));
+        }
+    }
+
+    public void ShowBTDeviceName(String name)
+    {
+        if(txtConnectedDeviceName!=null) {
+            txtConnectedDeviceName.setText(name);
+        }
+    }
 }

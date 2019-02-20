@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.lightclockcontrol.gss.dummy.DummyContent.DummyItem;
@@ -55,6 +56,13 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
                     // fragment is attached to one) that an item has been selected.
                     mListener.onListFragmentInteraction(holder.mItem);
                 }
+            }
+        });
+        holder.chkEnabled.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                holder.mItem.isEnabled = holder.chkEnabled.isChecked();
+                mListener.onCheckedStateChanged(holder.mItem);
             }
         });
     }
@@ -167,6 +175,6 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
         void onListFragmentInteraction(ScheduleViewAdapter.ScheduleItem item);
+        void onCheckedStateChanged(ScheduleViewAdapter.ScheduleItem item);
     }
-
 }

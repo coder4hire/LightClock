@@ -17,6 +17,8 @@ public:
 
 	bool UpdateScheduleItem(const CScheduleItem& item);
 
+	bool EnableScheduleItem(uint8_t index, bool isEnabled);
+
 	void OnTimeTick();
 	void TestRunEffect(CScheduleItem::EEffectType effect);
 	void StopEffects();
@@ -25,5 +27,7 @@ protected:
 	CScheduler();
 	CAlarmEffect currectEffect;
 	int currentEffectScheduleIdx;
+	void StoreItemToEEPROM(int index);
+	void LoadItemsFromEEPROM();
 };
 
