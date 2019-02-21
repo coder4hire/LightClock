@@ -2,7 +2,6 @@
 #include "Main.h"
 #include "RGBControl.h"
 
-
 CAlarmEffect::CAlarmEffect()
 {
 	activationTime = 0;
@@ -45,6 +44,25 @@ void CAlarmEffect::OnTimeTick()
 			case CScheduleItem::EF_SUNRISE:
 				SunriseTimeTick(now);
 				break;
+			case CScheduleItem::EF_RED:
+				CRGBControl::Inst.SetRGBW(RGBW(1,0,0,0));
+				break;
+			case CScheduleItem::EF_GREEN:
+				CRGBControl::Inst.SetRGBW(RGBW(0, 1, 0, 0));
+				break;
+			case CScheduleItem::EF_BLUE:
+				CRGBControl::Inst.SetRGBW(RGBW(0, 0, 1, 0));
+				break;
+			case CScheduleItem::EF_RED_HIGH:
+				CRGBControl::Inst.SetRGBW(RGBW(255, 0, 0, 0));
+				break;
+			case CScheduleItem::EF_GREEN_HIGH:
+				CRGBControl::Inst.SetRGBW(RGBW(0, 255, 0, 0));
+				break;
+			case CScheduleItem::EF_BLUE_HIGH:
+				CRGBControl::Inst.SetRGBW(RGBW(0, 0, 255, 0));
+				break;
+
 			}
 		}
 
@@ -109,25 +127,25 @@ void CAlarmEffect::SunriseTimeTick(time_t now)
 
 	if (diff < phaseLen)
 	{
-		color.R = 200 * diff / phaseLen;
+		color.R = 200l * diff / phaseLen;
 	}
 	else if (diff < 2 * phaseLen)
 	{
-		color.R = 200 + 55 * (diff - phaseLen) / phaseLen;
-		color.G = 255 * (diff - phaseLen) / phaseLen;
+		color.R = 200l + 55l * (diff - phaseLen) / phaseLen;
+		color.G = 208l * (diff - phaseLen) / phaseLen;
 	}
 	else if (diff < phaseLen*3)
 	{
 		color.R = 255;
-		color.G = 255;
-		color.B = 160 * (diff - 2 * phaseLen) / phaseLen;
-		color.W = 255 * (diff - 2 * phaseLen) / phaseLen;
+		color.G = 208;
+		color.B = 128l * (diff - 2 * phaseLen) / phaseLen;
+		color.W = 255l * (diff - 2 * phaseLen) / phaseLen;
 	}
 	else
 	{
 		color.R = 255;
-		color.G = 255;
-		color.B = 160;
+		color.G = 208;
+		color.B = 128;
 		color.W = 255;
 	}
 	CRGBControl::Inst.SetRGBW(color);

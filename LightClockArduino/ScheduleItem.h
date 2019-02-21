@@ -6,7 +6,12 @@ public:
 	{
 		EF_NONE,
 		EF_SUNRISE,
-		EF_RED
+		EF_RED,
+		EF_RED_HIGH,
+		EF_GREEN,
+		EF_GREEN_HIGH,
+		EF_BLUE,
+		EF_BLUE_HIGH
 	};
 
 	uint8_t ID;

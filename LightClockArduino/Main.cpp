@@ -176,7 +176,10 @@ bool CMain::CheckButtonStatus()
 
 void CMain::OnButtonPressed()
 {
+	static int mode = 0;
+	mode = (mode + 1) % 6;
 	Serial.println("Button is pressed");
+	//CScheduler::Inst.TestRunEffect(CScheduleItem::EF_RED+mode);
 	CScheduler::Inst.TestRunEffect(CScheduleItem::EF_SUNRISE);
 	//Player.Next();
 }

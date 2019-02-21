@@ -15,6 +15,14 @@ union RGBW
 	{
 		Data = data;
 	}
+
+	RGBW(unsigned char R, unsigned char G, unsigned char B, unsigned char W)
+	{
+		this->R = R;
+		this->G = G;
+		this->B = B;
+		this->W = W;
+	}
 };
 
 class CRGBControl
@@ -35,6 +43,7 @@ public:
 	void SetRGBW(RGBW rgbw);
 protected:
 	static const unsigned char brightness2PWM[256];
+	static const unsigned char brightness2PWMGreen[256];
 	CRGBControl() {}
 };
 
