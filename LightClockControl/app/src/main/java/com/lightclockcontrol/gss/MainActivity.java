@@ -1,6 +1,7 @@
 package com.lightclockcontrol.gss;
 
 import android.annotation.SuppressLint;
+import android.icu.util.Calendar;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -72,8 +73,11 @@ public class MainActivity extends AppCompatActivity {
                         alarmsFragment.UpdateSchedule((ScheduleViewAdapter.ScheduleItem[]) msg.obj);
                         break;
                     case MSG_UPDATE_CLOCK_TIME:
-                        Date dateTime = new Date(msg.arg1 < 0 ? (msg.arg1 + 0x1000000l) * 1000 : ((long) msg.arg1) * 1000);
-                        settingsFragment.ShowClockTime(dateTime);
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        long utcTime = (msg.arg1 < 0 ? (msg.arg1 + 0x1000000l): ((long) msg.arg1))*1000
+                                -cal.get(java.util.Calendar.ZONE_OFFSET)-cal.get(java.util.Calendar.DST_OFFSET);
+
+                        settingsFragment.ShowClockTime(new Date(utcTime));
                         break;
                     case MSG_BT_CONNECTED:
                         settingsFragment.ShowBTDeviceName(msg.obj.toString());

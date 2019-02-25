@@ -3,14 +3,14 @@
 
 IRControl IRControl::Inst;
 
-const unsigned PROGMEM long IRControl::buttonCodes[IR_MAX] =
+const PROGMEM unsigned long IRControl::buttonCodes[IR_MAX] =
 {
-	0, // IR_CANCEL
-	0, // IR_OK
-	0, // IR_UP
-	0, // IR_DOWN
-	0xF807FF00, // IR_LEFT
-	0xF906FF00, // IR_RIGHT
+	0xB04FF00, // IR_CANCEL
+	0xF30CFF00, // IR_OK
+	0xF10EFF00, // IR_UP
+	0xF609FF00, // IR_DOWN
+	0xF20DFF00, // IR_LEFT
+	0xF40BFF00, // IR_RIGHT
 };
 
 IRControl::IRControl()
@@ -73,8 +73,10 @@ IR_ACTIONS IRControl::GetButtonPressed()
 	{
 		for (int i = 0; i < IR_MAX; i++)
 		{
-			if (pgm_read_dword(buttonCodes) == code)
+			if (pgm_read_dword(buttonCodes+i) == code)
 			{
+				Serial.print("IR button pressed ");
+				Serial.println(i);
 				return (IR_ACTIONS)i;
 			}
 		}

@@ -54,6 +54,18 @@ void CPlayerCtrl::Previous()
 	dfPlayer.previous();
 }
 
+void CPlayerCtrl::VolumeUp()
+{
+	ListenPort();
+	dfPlayer.volumeUp();
+}
+
+void CPlayerCtrl::VolumeDown()
+{
+	ListenPort();
+	dfPlayer.volumeDown();
+}
+
 void CPlayerCtrl::SetVolume(uint8_t vol)
 {
 	ListenPort();

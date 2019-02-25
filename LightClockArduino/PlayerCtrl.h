@@ -14,6 +14,8 @@ public:
 	void Stop();
 	void Next();
 	void Previous();
+	void VolumeUp();
+	void VolumeDown();
 	void SetVolume(uint8_t vol);
 
 private:

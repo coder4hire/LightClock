@@ -30,7 +30,7 @@ void CMain::Setup()
 	RTC.begin();
 	if (!RTC.isrunning()) {
 		Serial.println("RTC is NOT running!");
-		RTC.adjust(DateTime(__DATE__, __TIME__));
+		//RTC.adjust(DateTime(__DATE__, __TIME__));
 	}
 	else
 	{
@@ -193,6 +193,18 @@ void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)
 		break;
 	case IR_RIGHT:
 		Player.Previous();
+		break;
+	case IR_UP:
+		Player.VolumeUp();
+		break;
+	case IR_DOWN:
+		Player.VolumeDown();
+		break;
+	case IR_OK:
+		Player.PlayRandom();
+		break;
+	case IR_CANCEL:
+		CScheduler::Inst.StopEffects();
 		break;
 	}
 }

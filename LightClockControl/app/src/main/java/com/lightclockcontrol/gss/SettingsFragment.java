@@ -1,6 +1,5 @@
 package com.lightclockcontrol.gss;
 
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,6 +15,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -71,7 +71,12 @@ public class SettingsFragment extends Fragment {
         btnSync.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BTInterface.GetInstance().SendSetTime(Calendar.getInstance().getTime());
+                Calendar cal = Calendar.getInstance();
+                int localTime = (int)((cal.getTimeInMillis()+cal.get(Calendar.ZONE_OFFSET)+cal.get(Calendar.DST_OFFSET))/1000);
+                if(!BTInterface.GetInstance().SendSetTime(localTime))
+                {
+                    Toast.makeText(getActivity(),R.string.toast_cannot_save,Toast.LENGTH_LONG).show();
+                }
             }
         });
 

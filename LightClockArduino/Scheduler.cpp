@@ -58,21 +58,26 @@ bool CScheduler::EnableScheduleItem(uint8_t index, bool isEnabled)
 void CScheduler::OnTimeTick()
 {
 	time_t now = CMain::Inst.RTC.now().unixtime();
-	for (int i = 0; i < SCHEDULE_ITEMS_NUM; i++)
+	for (int i = 0; i<SCHEDULE_ITEMS_NUM; i++)
 	{
 		const CScheduleItem* pItem = Schedule + i;
-		time_t prerollTime = CAlarmEffect::GetPrerollTime((CScheduleItem::EEffectType) pItem->EffectType);
-		time_t futurePoint = now + prerollTime;
-		tm* pParsedFuture = gmtime(&futurePoint);
-		time_t futureTimeNoDate = pParsedFuture->tm_hour * 3600l + pParsedFuture->tm_min * 60;
-
-		// Checking if item is to be executed
-		if ((1 << pParsedFuture->tm_wday) & pItem->DayOfWeekMask
-			&& futureTimeNoDate>=pItem->ExecTime && futureTimeNoDate <= pItem->ExecTime + prerollTime + 3 &&
-			(currentEffectScheduleIdx!=i || !currectEffect.IsRunning()))
+		if (pItem->IsEnabled)
 		{
-			currentEffectScheduleIdx = i;
-			currectEffect.Start(*pItem);
+			time_t prerollTime = CAlarmEffect::GetPrerollTime((CScheduleItem::EEffectType) pItem->EffectType);
+			time_t futurePoint = now + prerollTime;
+			tm* pParsedFuture = gmtime(&futurePoint);
+			time_t futureTimeNoDate = pParsedFuture->tm_hour * 3600l + pParsedFuture->tm_min * 60 + pParsedFuture->tm_sec;
+
+			// Checking if item is to be executed
+
+			if (((1 << pParsedFuture->tm_wday) & pItem->DayOfWeekMask)
+				&& futureTimeNoDate >= pItem->ExecTime && futureTimeNoDate <= pItem->ExecTime + prerollTime + 3 &&
+				(currentEffectScheduleIdx != i || !currectEffect.IsRunning()))
+			{
+				Serial.println("!!! Effect executed !");
+				currentEffectScheduleIdx = i;
+				currectEffect.Start(*pItem);
+			}
 		}
 	}
 
@@ -102,7 +107,7 @@ void CScheduler::StoreItemToEEPROM(int index)
 	if (index < SCHEDULE_ITEMS_NUM)
 	{
 		int offset = sizeof(CScheduleItem)*index;
-		uint8_t* pItem = (uint8_t*)(Schedule+offset);
+		uint8_t* pItem = ((uint8_t*)Schedule)+offset;
 		eeprom_update_block(pItem, (void *)offset, sizeof(CScheduleItem));
 	}
 }

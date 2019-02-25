@@ -139,9 +139,9 @@ public class BTPacketFactory {
         return Obj2BytesArray(bytesArray.toArray());
     }
 
-    public byte[] CreateSetTimePacket(Date dateTime) {
+    public byte[] CreateSetTimePacket(int localTime) {
         WriteHeader(PacketTypes.SetTime);
-        WriteToArray((int)(dateTime.getTime()/1000));
+        WriteToArray(localTime);
         bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
         int crc = CalcCRC();
         WriteToArray(crc);

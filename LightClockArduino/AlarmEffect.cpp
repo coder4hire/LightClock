@@ -131,7 +131,7 @@ void CAlarmEffect::SunriseTimeTick(time_t now)
 	}
 	else if (diff < 2 * phaseLen)
 	{
-		color.R = 200l + 55l * (diff - phaseLen) / phaseLen;
+		color.R = 190l + 65l * (diff - phaseLen) / phaseLen;
 		color.G = 208l * (diff - phaseLen) / phaseLen;
 	}
 	else if (diff < phaseLen*3)

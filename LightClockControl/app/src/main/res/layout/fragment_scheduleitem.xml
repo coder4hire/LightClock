@@ -9,8 +9,13 @@
         android:id="@+id/chkEnabled"
         android:layout_width="76dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginRight="@dimen/text_margin"
         android:layout_weight="1"
-        android:padding="2dp" />
+        android:padding="2dp"
+        android:scaleX="1.3"
+        android:scaleY="1.3"
+        android:theme="@style/Base.Widget.AppCompat.CompoundButton.CheckBox" />
 
     <TextView
         android:id="@+id/lblDescription"
@@ -18,6 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="top|left"
-        android:text="TextView" />
+        android:text="TextView"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline" />
 
 </LinearLayout>

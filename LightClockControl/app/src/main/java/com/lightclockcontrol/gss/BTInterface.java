@@ -208,8 +208,8 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.GetTime),false);
     }
 
-    public boolean SendSetTime(Date dateTime) {
-        return SendPacket(packetFactory.CreateSetTimePacket(dateTime),false);
+    public boolean SendSetTime(int localTime) {
+        return SendPacket(packetFactory.CreateSetTimePacket(localTime),false);
     }
 
     public boolean SendEnableScheduleItem(byte index, boolean isEnabled) {
