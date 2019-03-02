@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* This file was modified from its original version for the needs of Light Clock project */
+
 package app.akexorcist.bluetotohspp.library;
 
 import java.util.ArrayList;
@@ -372,7 +374,7 @@ public class BluetoothSPP {
 
             setBluetoothConnectionListener(bcl);
             c = 0;
-            if(mAutoConnectionListener != null)
+            if(mAutoConnectionListener != null && arr_name.length>c && arr_address.length>c)
                 mAutoConnectionListener.onNewConnection(arr_name[c], arr_address[c]);
             if(arr_filter_address.size() > 0) 
                 connect(arr_filter_address.get(c));

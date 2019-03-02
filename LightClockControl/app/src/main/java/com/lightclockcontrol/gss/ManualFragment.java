@@ -7,6 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import top.defaults.colorpicker.ColorObserver;
+import top.defaults.colorpicker.ColorPickerView;
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -59,7 +62,17 @@ public class ManualFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_manual, container, false);
+        View view = inflater.inflate(R.layout.fragment_manual, container, false);
+
+        final ColorPickerView colorPickerView = view.findViewById(R.id.colorPickerView);
+
+        colorPickerView.subscribe(new ColorObserver() {
+            @Override
+            public void onColor(int color, boolean fromUser, boolean shouldPropagate) {
+            }
+        });
+
+        return view;
     }
 
 }

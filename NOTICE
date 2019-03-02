@@ -1,0 +1,6 @@
+Light Alarm Clock
+Copyright coder4hire 2019
+
+This project uses following open source libraries:
+Color Picker: https://github.com/duanhong169/ColorPicker
+BluetoothSPPLibrary: https://github.com/akexorcist/Android-BluetoothSPPLibrary

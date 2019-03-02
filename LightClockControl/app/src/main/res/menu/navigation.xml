@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
         android:id="@+id/navigation_alarms"
-        android:icon="@drawable/ic_home_black_24dp"
+        android:icon="@android:drawable/ic_lock_idle_alarm"
         android:title="@string/title_alarms" />
 
     <item
         android:id="@+id/navigation_manual"
-        android:icon="@drawable/ic_dashboard_black_24dp"
+        android:icon="@android:drawable/btn_star"
         android:title="@string/title_manual" />
 
     <item
         android:id="@+id/navigation_settings"
-        android:icon="@drawable/ic_notifications_black_24dp"
+        android:icon="@android:drawable/ic_menu_preferences"
         android:title="@string/title_settings" />
+
+    <item
+        android:id="@+id/mute_alarm"
+        android:icon="@android:drawable/ic_lock_silent_mode"
+        android:title="Mute Alarm" />
 
 </menu>

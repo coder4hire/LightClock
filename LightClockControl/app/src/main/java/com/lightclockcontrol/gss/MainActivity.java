@@ -11,6 +11,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.util.Date;
 
@@ -42,6 +43,10 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.navigation_settings:
                     mgr.beginTransaction().replace(R.id.fragmentContent,settingsFragment).commit();
                     return true;
+
+                case R.id.mute_alarm:
+                    BTInterface.GetInstance().SendStopAlarm();
+                    return false;
             }
             return false;
         }

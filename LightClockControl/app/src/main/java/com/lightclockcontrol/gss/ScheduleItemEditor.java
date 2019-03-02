@@ -89,7 +89,7 @@ public class ScheduleItemEditor extends AppCompatActivity {
             timePicker.setCurrentMinute(cal.get(Calendar.MINUTE));
 
             spinFolder.setSelection(editingItem.folderID);
-            if(editingItem.songID!=255) {
+            if(editingItem.songID!=-1) {
                 chkRnd.setChecked(false);
                 edtSong.setText(Integer.toString(editingItem.songID));
             }
@@ -164,7 +164,12 @@ public class ScheduleItemEditor extends AppCompatActivity {
     private boolean SaveDataToClock() {
         editingItem.effectType = EffectType.fromValue((int)spinVisualEffect.getSelectedItemId());
         editingItem.execTime.setTime(((long)timePicker.getCurrentHour())*3600l+((long)timePicker.getCurrentMinute())*60l);
-        editingItem.folderID= (byte)(spinFolder.getSelectedItemId());
+        if(chkRnd.isChecked()) {
+            editingItem.folderID=-1;
+        }
+        else {
+            editingItem.folderID = (byte) (spinFolder.getSelectedItemId());
+        }
         editingItem.songID = (byte)Integer.parseInt(edtSong.getText().toString());
         editingItem.lightEnabledTime = Integer.parseInt(edtLightLength.getText().toString());
         editingItem.soundEnabledTime = Integer.parseInt(edtSoundLength.getText().toString());

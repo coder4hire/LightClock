@@ -1,14 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ManualFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_margin="5dp"
+        android:orientation="vertical">
+
+        <top.defaults.colorpicker.ColorPickerView
+            android:id="@+id/colorPickerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:enableAlpha="false"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+        </top.defaults.colorpicker.ColorPickerView>
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+
+        <CheckBox
+            android:id="@+id/chkEnableLEDs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="10dp"
+            android:scaleX="1.3"
+            android:scaleY="1.3"
+            android:text="Enable LEDs"
+            android:textSize="18sp"
+            android:theme="@style/Base.Widget.AppCompat.CompoundButton.CheckBox" />
+
+    </LinearLayout>
 
 </FrameLayout>

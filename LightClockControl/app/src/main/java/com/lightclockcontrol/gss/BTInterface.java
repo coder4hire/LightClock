@@ -216,6 +216,11 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         return SendPacket(packetFactory.CreateEnableScheduleItemPacket(index, isEnabled), true);
     }
 
+    public boolean SendStopAlarm() {
+        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.StopAlarm),false);
+    }
+
+
     @Override
     public void OnAcknowledged(int packetID) {
         lock.lock();

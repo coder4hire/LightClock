@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+/* This file was modified from its original version for the needs of Light Clock project */
 
 package app.akexorcist.bluetotohspp.library;
 

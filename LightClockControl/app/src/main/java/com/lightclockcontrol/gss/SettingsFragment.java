@@ -80,6 +80,23 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        return view;
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        if(timer!=null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
         // Setting up timer
         if(timer==null)
         {
@@ -91,15 +108,6 @@ public class SettingsFragment extends Fragment {
                 }
             },0,1000);
         }
-        return view;
-    }
-
-    @Override
-    public void onPause()
-    {
-        super.onPause();
-        timer.cancel();
-        timer=null;
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

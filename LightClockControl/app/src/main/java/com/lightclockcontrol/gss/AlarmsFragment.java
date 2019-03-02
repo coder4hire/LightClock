@@ -124,9 +124,9 @@ public class AlarmsFragment extends Fragment {
     }
 
     @Override
-    public void onResume()
+    public void onStart()
     {
-        super.onResume();
+        super.onStart();
         BTInterface.GetInstance().SendGetSchedule();
     }
 }
