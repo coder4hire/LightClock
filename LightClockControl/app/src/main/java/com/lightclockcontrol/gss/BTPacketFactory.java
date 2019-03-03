@@ -16,9 +16,14 @@ enum PacketTypes {
     GetTime(4),
     StopAlarm(5),
     EnableScheduleItem(6),
+    SetVolume(7),
+    GetConfig(8),
+    SaveConfig(9),
+    SetManualColor(10),
     SimpleAck(0x40),
     ScheduleRecv(0x41),
-    TimeRecv(0x44);
+    TimeRecv(0x44),
+    ConfigRecv(0x48);
 
     private int value;
     PacketTypes(int value) {
@@ -158,6 +163,16 @@ public class BTPacketFactory {
         return Obj2BytesArray(bytesArray.toArray());
     }
 
+    public byte[] CreateSetManualColorPacket(int rgbw)
+    {
+        WriteHeader(PacketTypes.SetManualColor);
+        WriteToArray(rgbw);
+        bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
+        int crc = CalcCRC();
+        WriteToArray(crc);
+        return Obj2BytesArray(bytesArray.toArray());
+    }
+
     public int ParsePacket(byte[] data,int awaitingID, IOnAckCallback ackCallback)
     {
         if(data.length<HeaderSize) {
@@ -212,14 +227,18 @@ public class BTPacketFactory {
                         items[i]=item;
                     }
 
-                    MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE, items).sendToTarget();
+                    if(MainActivity.uiHandler!=null) {
+                        MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_SCHEDULE, items).sendToTarget();
+                    }
                     break;
                 case TimeRecv:
                     if (awaitingID != packetID) {
                         return payloadSize + HeaderSize + CRCSize; // wrong packet ID for this type, skip the packet
                     }
                     int dateTime = ReadIntFromArray(data,HeaderSize);
-                    MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_CLOCK_TIME,dateTime,0).sendToTarget();
+                    if(MainActivity.uiHandler!=null) {
+                        MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_CLOCK_TIME, dateTime, 0).sendToTarget();
+                    }
 
             }
         }

@@ -1,6 +1,7 @@
 #include "BTInterface.h"
 #include "Scheduler.h"
 #include "Main.h"
+#include "RGBControl.h"
 
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
 //#define POLY 0x82f63b78
@@ -118,6 +119,12 @@ void CBTInterface::ProcessBTCommands()
 		case PACK_EnableScheduleItem:
 			OnEnableScheduleItem(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
+		case PACK_StopAlarm:
+			OnStopAlarm(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			break;
+		case PACK_SetManualColor:
+			OnSetManualColor(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			break;
 		}
 	}
 
@@ -162,23 +169,21 @@ bool CBTInterface::CheckForCompleteCommand()
 			return false;
 		}
 
-		for (int j = cmdHeadIndex; j != cmdTailIndex; j = (j + 1) % CMD_MAX_SIZE)
-		{
-			Serial.print(cmdBuffer[j], 16);
-			Serial.print(" ");
-		}
-		Serial.println("");
-
 		uint16_t payloadLength = ReadCmdBufferUShort(10);
 		uint32_t fullPacketLength = payloadLength + sizeof(BTPacketHeader) + sizeof(uint32_t);
 		if (GetCmdBufLength() >= fullPacketLength)
 		{
-			Serial.println("Complete");
+			for (int j = cmdHeadIndex; j != cmdTailIndex; j = (j + 1) % CMD_MAX_SIZE)
+			{
+				Serial.print(cmdBuffer[j], 16);
+				Serial.print(" ");
+			}
+			Serial.println("");
+
 			uint32_t storedCRC32 = ReadCmdBufferULong(payloadLength + sizeof(BTPacketHeader));
 			uint32_t calcCRC32 = CmdBufCRC32(payloadLength + sizeof(BTPacketHeader));
 			if (calcCRC32 == storedCRC32)
 			{
-				Serial.println("!!!Got packet, good CRC");
 				int endOfPacketIdx = (cmdHeadIndex + fullPacketLength) % CMD_MAX_SIZE;
 				if (endOfPacketIdx > cmdHeadIndex)
 				{
@@ -246,6 +251,20 @@ void CBTInterface::OnEnableScheduleItem(BTPacketHeader* pHeader, void* pPayload)
 	SendSchedule(pHeader->PacketID);
 }
 
+void CBTInterface::OnStopAlarm(BTPacketHeader * pHeader, void * pPayload)
+{
+	CScheduler::Inst.StopEffects();
+	SendSimpleAck(pHeader->PacketID);
+}
+
+void CBTInterface::OnSetManualColor(BTPacketHeader * pHeader, void * pPayload)
+{
+	RGBW color = *(long*)pPayload;
+	Serial.print("RGBW:");
+	Serial.println(color.Data,16);
+	CRGBControl::Inst.SetRGBW(color);
+	SendSimpleAck(pHeader->PacketID);
+}
 
 bool CBTInterface::SendSchedule(uint32_t packetID)
 {

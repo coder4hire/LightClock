@@ -6,6 +6,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.SeekBar;
 
 import top.defaults.colorpicker.ColorObserver;
 import top.defaults.colorpicker.ColorPickerView;
@@ -65,10 +67,50 @@ public class ManualFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_manual, container, false);
 
         final ColorPickerView colorPickerView = view.findViewById(R.id.colorPickerView);
+        final SeekBar seekWhite = view.findViewById(R.id.seekWhite);
+        final CheckBox chkEnableLEDs = view.findViewById(R.id.chkEnableLEDs);
 
         colorPickerView.subscribe(new ColorObserver() {
             @Override
             public void onColor(int color, boolean fromUser, boolean shouldPropagate) {
+                if(chkEnableLEDs.isChecked())
+                {
+                    BTInterface.GetInstance().SendSetManualColorPacket(color,seekWhite.getProgress());
+                }
+            }
+        });
+
+        seekWhite.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(chkEnableLEDs.isChecked())
+                {
+                    BTInterface.GetInstance().SendSetManualColorPacket(colorPickerView.getColor(),progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        chkEnableLEDs.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(chkEnableLEDs.isChecked())
+                {
+                    BTInterface.GetInstance().SendSetManualColorPacket(colorPickerView.getColor(),seekWhite.getProgress());
+                }
+                else
+                {
+                    BTInterface.GetInstance().SendSetManualColorPacket(0,0);
+                }
             }
         });
 

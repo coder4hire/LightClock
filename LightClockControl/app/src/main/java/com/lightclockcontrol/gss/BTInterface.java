@@ -220,6 +220,11 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.StopAlarm),false);
     }
 
+    public boolean SendSetManualColorPacket(int rgb, int white)
+    {
+        int rgbw = ((rgb&0xFF0000)>>16) | ((rgb&0xFF)<<16) | (rgb&0xFF00) | (white << 24);
+        return SendPacket(packetFactory.CreateSetManualColorPacket(rgbw),false);
+    }
 
     @Override
     public void OnAcknowledged(int packetID) {

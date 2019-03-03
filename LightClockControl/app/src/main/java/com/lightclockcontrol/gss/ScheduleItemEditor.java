@@ -81,6 +81,17 @@ public class ScheduleItemEditor extends AppCompatActivity {
         if(parcel!=null) {
             editingItem = (ScheduleViewAdapter.ScheduleItem) parcel;
 
+            if(editingItem.folderID>=spinnerAdapterFolders.getCount())
+            {
+                editingItem.folderID=0;
+            }
+            if(editingItem.effectType.getValue()>=spinnerAdapterEffects.getCount())
+            {
+                editingItem.effectType=EffectType.None;
+            }
+
+
+
             spinVisualEffect.setSelection(editingItem.effectType.getValue());
 
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -89,7 +100,7 @@ public class ScheduleItemEditor extends AppCompatActivity {
             timePicker.setCurrentMinute(cal.get(Calendar.MINUTE));
 
             spinFolder.setSelection(editingItem.folderID);
-            if(editingItem.songID!=-1) {
+            if(editingItem.folderID!=-1) {
                 chkRnd.setChecked(false);
                 edtSong.setText(Integer.toString(editingItem.songID));
             }
@@ -171,8 +182,18 @@ public class ScheduleItemEditor extends AppCompatActivity {
             editingItem.folderID = (byte) (spinFolder.getSelectedItemId());
         }
         editingItem.songID = (byte)Integer.parseInt(edtSong.getText().toString());
-        editingItem.lightEnabledTime = Integer.parseInt(edtLightLength.getText().toString());
-        editingItem.soundEnabledTime = Integer.parseInt(edtSoundLength.getText().toString());
+
+        try {
+            editingItem.lightEnabledTime = Integer.parseInt(edtLightLength.getText().toString());
+        } catch (Exception e) {
+            editingItem.lightEnabledTime = 600;
+        }
+        try {
+            editingItem.soundEnabledTime = Integer.parseInt(edtSoundLength.getText().toString());
+        } catch (Exception e) {
+            editingItem.soundEnabledTime = 600;
+        }
+
         editingItem.dayOfWeekMask=0;
         for(int i=0;i<7;i++)
         {

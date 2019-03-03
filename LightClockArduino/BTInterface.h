@@ -8,15 +8,20 @@
 enum EPacketType
 {
 	PACK_Unknown = 0,
-	PACK_ScheduleUpdate=1,
-	PACK_GetSchedule=2,
-	PACK_SetTime=3,
-	PACK_GetTime=4,
-	PACK_StopAlarm=5,
+	PACK_ScheduleUpdate = 1,
+	PACK_GetSchedule = 2,
+	PACK_SetTime = 3,
+	PACK_GetTime = 4,
+	PACK_StopAlarm = 5,
 	PACK_EnableScheduleItem = 6,
+	PACK_SetVolume = 7,
+	PACK_GetConfig = 8,
+	PACK_SaveConfig = 9,
+	PACK_SetManualColor = 10,
 	PACK_SimpleAck=0x40,
 	PACK_ScheduleRecv=0x41,
-	PACK_TimeRecv=0x44
+	PACK_TimeRecv=0x44,
+	PACK_ConfigRecv = 0x48
 };
 
 struct BTPacketHeader
@@ -83,6 +88,8 @@ protected:
 	void OnScheduleUpdate(BTPacketHeader* pHeader, void* pPayload);
 	void OnSetTime(BTPacketHeader * pHeader, void * pPayload);
 	void OnEnableScheduleItem(BTPacketHeader * pHeader, void * pPayload);
+	void OnStopAlarm(BTPacketHeader * pHeader, void * pPayload);
+	void OnSetManualColor(BTPacketHeader * pHeader, void * pPayload);
 
 	size_t FinalizePacketAndWrite(uint8_t* buffer, EPacketType packetType, uint32_t packetID, uint16_t payloadLength);
 	bool SendSchedule(uint32_t packetID);
