@@ -8,6 +8,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +36,7 @@ public class SettingsFragment extends Fragment {
     TextView txtClockTime;
     TextView txtConnectedDeviceName;
     Timer timer = null;
+    boolean isPlayBtnShown=true;
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -54,6 +57,9 @@ public class SettingsFragment extends Fragment {
         btnSync = (Button) view.findViewById(R.id.btnSyncClock);
         txtClockTime = (TextView) view.findViewById(R.id.txtClockTime);
         txtConnectedDeviceName = (TextView)view.findViewById(R.id.txtConnectedDeviceName);
+
+        final ImageButton btnPlayStop = (ImageButton)view.findViewById(R.id.btnPlayStop);
+        final SeekBar seekVolume = (SeekBar)view.findViewById(R.id.seekVolume);
 
         txtConnectedDeviceName.setText(BTInterface.GetInstance().GetConnectedDeviceName());
 
@@ -77,6 +83,43 @@ public class SettingsFragment extends Fragment {
                 {
                     Toast.makeText(getActivity(),R.string.toast_cannot_save,Toast.LENGTH_LONG).show();
                 }
+            }
+        });
+
+        isPlayBtnShown = true;
+        btnPlayStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(isPlayBtnShown)
+                {
+                    BTInterface.GetInstance().SendPlayMusicPacket();
+                }
+                else
+                {
+                    BTInterface.GetInstance().SendStopMusicPacket();
+                }
+                isPlayBtnShown=!isPlayBtnShown;
+                int id = getResources().getIdentifier(
+                        isPlayBtnShown? "@android:drawable/ic_media_play" : "@android:drawable/ic_media_stop",
+                        null, null);
+                btnPlayStop.setImageResource(id);
+            }
+        });
+
+        seekVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                BTInterface.GetInstance().SendSetVolumePacket(seekBar.getProgress());
             }
         });
 

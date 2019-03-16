@@ -2,6 +2,7 @@
 #include "Scheduler.h"
 #include "Main.h"
 #include "RGBControl.h"
+#include "BoardConfig.h"
 
 /* CRC-32C (iSCSI) polynomial in reversed bit order. */
 //#define POLY 0x82f63b78
@@ -122,9 +123,25 @@ void CBTInterface::ProcessBTCommands()
 		case PACK_StopAlarm:
 			OnStopAlarm(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
+		case PACK_GetConfig:
+			SendConfig(pHeader->PacketID);
+			break;
+		case PACK_SetConfig:
+			OnSetConfig(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			break;
 		case PACK_SetManualColor:
 			OnSetManualColor(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
+		case PACK_GetSensorsInfo:
+			SendSensorsInfo(pHeader->PacketID);
+			break;
+		case PACK_PlayMusic:
+			OnPlayStop(pHeader,true);
+			break;
+		case PACK_StopMusic:
+			OnPlayStop(pHeader, false);
+			break;
+
 		}
 	}
 
@@ -266,6 +283,57 @@ void CBTInterface::OnSetManualColor(BTPacketHeader * pHeader, void * pPayload)
 	SendSimpleAck(pHeader->PacketID);
 }
 
+void  CBTInterface::OnSetConfig(BTPacketHeader * pHeader, void * pPayload)
+{
+	CBoardConfigItems* pNewCfg = (CBoardConfigItems*)pPayload;
+	if (CBoardConfig::Inst.Volume != pNewCfg->Volume)
+	{
+		CMain::Inst.Player.SetVolume(pNewCfg->Volume);
+	}
+	*CBoardConfig::Inst.GetItemsPtr() = *pNewCfg;
+	CBoardConfig::Inst.StoreToEEPROM();
+	SendSimpleAck(pHeader->PacketID);
+}
+
+void CBTInterface::OnSetVolume(BTPacketHeader * pHeader, void * pPayload)
+{
+	CMain::Inst.Player.SetVolume(CBoardConfig::Inst.Volume);
+	SendSimpleAck(pHeader->PacketID);
+}
+
+void CBTInterface::OnPlayStop(BTPacketHeader * pHeader, bool shouldPlay)
+{
+	if (shouldPlay)
+	{
+		CMain::Inst.Player.Play();
+	}
+	else
+	{
+		CMain::Inst.Player.Stop();
+	}
+	SendSimpleAck(pHeader->PacketID);
+}
+
+
+bool CBTInterface::SendSensorsInfo(uint32_t packetID)
+{
+	uint8_t buffer[BUF_OVERHEAD + sizeof(CSensorsInfo)];
+	CSensorsInfo* payload = (CSensorsInfo*)(buffer + sizeof(BTPacketHeader));
+	CMain::Inst.GetSensorsInfo(payload);
+	size_t written = FinalizePacketAndWrite(buffer, PACK_SensorsInfoRecv, packetID, sizeof(CSensorsInfo));
+	return written>0;
+}
+
+bool CBTInterface::SendConfig(uint32_t packetID)
+{
+	uint8_t buffer[BUF_OVERHEAD + sizeof(CBoardConfigItems)];
+	CBoardConfigItems* payload = (CBoardConfigItems*)(buffer + sizeof(BTPacketHeader));
+	*payload = *CBoardConfig::Inst.GetItemsPtr();
+	size_t written = FinalizePacketAndWrite(buffer, PACK_ConfigRecv, packetID, sizeof(CBoardConfigItems));
+	return written>0;
+}
+
+
 bool CBTInterface::SendSchedule(uint32_t packetID)
 {
 	uint8_t buffer[BUF_OVERHEAD + sizeof(CScheduleItem)*SCHEDULE_ITEMS_NUM];
@@ -299,17 +367,6 @@ size_t CBTInterface::FinalizePacketAndWrite(uint8_t* buffer,EPacketType packetTy
 	((BTPacketHeader*)buffer)->PayloadLength = payloadLength;
 	*(uint32_t*)(buffer + sizeof(BTPacketHeader) + payloadLength) = CRC32((const uint8_t*)buffer, sizeof(BTPacketHeader) + payloadLength);
 	return BTSerial.write(buffer, BUF_OVERHEAD + payloadLength);
-}
-
-
-bool CBTInterface::SendConfig(CBoardConfig * pConfig)
-{
-	return false;
-}
-
-bool CBTInterface::LoadConfig(CBoardConfig * pConfig)
-{
-	return false;
 }
 
 uint32_t CBTInterface::ReadCmdBufferULong(int offset)

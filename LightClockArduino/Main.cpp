@@ -10,6 +10,8 @@ CMain CMain::Inst;
 // NOTE: If you use original schematics, this pin should be D7
 // But my Nano has this pin broken, so it is rewired to D12
 #define BUTTON_PIN 12
+#define FRONTLIGHT_SENSOR_PIN A6
+#define BACKLIGHT_SENSOR_PIN A7
 
 CMain::CMain()
 {
@@ -39,6 +41,8 @@ void CMain::Setup()
 
 	// Setting up button pin
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
+	pinMode(FRONTLIGHT_SENSOR_PIN, INPUT);
+	pinMode(BACKLIGHT_SENSOR_PIN, INPUT);
 
 	// Initializing other components
 	CBTInterface::Inst.Init();
@@ -162,6 +166,12 @@ void CMain::Loop()
 	delay(10);
 }
 
+void CMain::GetSensorsInfo(CSensorsInfo * info)
+{
+	info->FrontLightSensor = analogRead(FRONTLIGHT_SENSOR_PIN);
+	info->BackLightSensor = analogRead(BACKLIGHT_SENSOR_PIN);
+}
+
 bool CMain::CheckButtonStatus()
 {
 	uint8_t state = digitalRead(BUTTON_PIN);
@@ -176,12 +186,9 @@ bool CMain::CheckButtonStatus()
 
 void CMain::OnButtonPressed()
 {
-	static int mode = 0;
-	mode = (mode + 1) % 6;
-	Serial.println("Button is pressed");
-	//CScheduler::Inst.TestRunEffect(CScheduleItem::EF_RED+mode);
-	CScheduler::Inst.TestRunEffect(CScheduleItem::EF_SUNRISE);
-	//Player.Next();
+	//Serial.println("Button is pressed");
+	//CScheduler::Inst.TestRunEffect(CScheduleItem::EF_SUNRISE);
+	CScheduler::Inst.StopEffects();
 }
 
 void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)

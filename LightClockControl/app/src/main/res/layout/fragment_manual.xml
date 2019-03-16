@@ -29,7 +29,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:max="255" />
+            android:layout_marginLeft="3dp"
+            android:layout_marginRight="3dp"
+            android:max="255"
+            android:thumb="@drawable/thumb_mage"/>
 
         <CheckBox
             android:id="@+id/chkEnableLEDs"

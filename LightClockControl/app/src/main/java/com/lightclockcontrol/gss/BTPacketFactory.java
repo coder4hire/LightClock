@@ -19,11 +19,16 @@ enum PacketTypes {
     SetVolume(7),
     GetConfig(8),
     SaveConfig(9),
-    SetManualColor(10),
+    SetManualColor(0xA),
+    GetSensorsInfo(0xB),
+    PlayMusic(0xC),
+    StopMusic(0xD),
+
     SimpleAck(0x40),
     ScheduleRecv(0x41),
     TimeRecv(0x44),
-    ConfigRecv(0x48);
+    ConfigRecv(0x48),
+    SensorsInfoRecv(0x4B);
 
     private int value;
     PacketTypes(int value) {
@@ -167,6 +172,16 @@ public class BTPacketFactory {
     {
         WriteHeader(PacketTypes.SetManualColor);
         WriteToArray(rgbw);
+        bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
+        int crc = CalcCRC();
+        WriteToArray(crc);
+        return Obj2BytesArray(bytesArray.toArray());
+    }
+
+    public byte[] CreateSetVolumePacket(int volume)
+    {
+        WriteHeader(PacketTypes.SetVolume);
+        WriteToArray((byte)volume);
         bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
         int crc = CalcCRC();
         WriteToArray(crc);

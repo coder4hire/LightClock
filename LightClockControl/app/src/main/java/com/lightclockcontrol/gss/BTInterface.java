@@ -97,18 +97,20 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         });
 
         // Enable Bluetooth
-        if (!bt.isBluetoothEnabled()) {
-            bt.enable();
-        } else {
-            if (!bt.isServiceAvailable()) {
-                bt.setupService();
-                bt.startService(BluetoothState.DEVICE_OTHER);
+        if(bt.isBluetoothAvailable()) {
+            if (!bt.isBluetoothEnabled()) {
+                bt.enable();
+            } else {
+                if (!bt.isServiceAvailable()) {
+                    bt.setupService();
+                    bt.startService(BluetoothState.DEVICE_OTHER);
+                }
             }
+
+            bt.autoConnect("LightClock");
         }
-
-        bt.autoConnect("LightClock");
-
         bt.setOnDataReceivedListener(this);
+
     }
 
     public void close() throws Exception {
@@ -175,23 +177,23 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
     public boolean SendPacket(byte[] data, boolean waitForResponse)
     {
-        if(waitForResponse) {
-            try {
-                lock.lock();
-                for (int i = 0; i < 10; i++) {
-                    SendData(data);
-                    if (acknowledged.await(1000, TimeUnit.MILLISECONDS)) {
-                        lock.unlock();
-                        return true;
+        if(bt.isBluetoothAvailable()) {
+            if (waitForResponse) {
+                try {
+                    lock.lock();
+                    for (int i = 0; i < 10; i++) {
+                        SendData(data);
+                        if (acknowledged.await(1000, TimeUnit.MILLISECONDS)) {
+                            lock.unlock();
+                            return true;
+                        }
                     }
+                } catch (InterruptedException e) {
+                    lock.unlock();
                 }
-            } catch (InterruptedException e) {
-                lock.unlock();
+            } else {
+                SendData(data);
             }
-        }
-        else
-        {
-            SendData(data);
         }
         return false;
     }
@@ -224,6 +226,21 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
     {
         int rgbw = ((rgb&0xFF0000)>>16) | ((rgb&0xFF)<<16) | (rgb&0xFF00) | (white << 24);
         return SendPacket(packetFactory.CreateSetManualColorPacket(rgbw),false);
+    }
+
+    public boolean SendSetVolumePacket(int volume)
+    {
+        return SendPacket(packetFactory.CreateSetVolumePacket(volume),false);
+    }
+
+    public boolean SendPlayMusicPacket()
+    {
+        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.PlayMusic),false);
+    }
+
+    public boolean SendStopMusicPacket()
+    {
+        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.StopMusic),false);
     }
 
     @Override

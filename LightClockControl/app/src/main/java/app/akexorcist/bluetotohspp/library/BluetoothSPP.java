@@ -101,6 +101,13 @@ public class BluetoothSPP {
     }
     
     public boolean isBluetoothEnabled() {
+        try {
+            if (mBluetoothAdapter == null || mBluetoothAdapter.getAddress().equals(null))
+                return false;
+        } catch (NullPointerException e) {
+            return false;
+        }
+
         return mBluetoothAdapter.isEnabled();
     }
     

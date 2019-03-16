@@ -36,6 +36,12 @@ void CPlayerCtrl::PlaySong(uint8_t folderID, uint8_t songID)
 	dfPlayer.playFolder(folderID, songID);
 }
 
+void CPlayerCtrl::Play()
+{
+	ListenPort();
+	dfPlayer.play();
+}
+
 void CPlayerCtrl::Stop()
 {
 	ListenPort();

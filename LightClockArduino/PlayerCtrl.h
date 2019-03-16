@@ -11,6 +11,7 @@ public:
 	void Init();
 	void PlayRandom();
 	void PlaySong(uint8_t folderID, uint8_t songID);
+	void Play();
 	void Stop();
 	void Next();
 	void Previous();

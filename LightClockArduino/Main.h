@@ -9,6 +9,8 @@
 #define DFPLAYER_RECONNECT_INTERVAL 500
 #define TRACE(x) Serial.println(x);
 
+struct CSensorsInfo;
+
 class CMain
 {
 public:
@@ -19,6 +21,8 @@ public:
 
 	void Setup();
 	void Loop();
+
+	void GetSensorsInfo(CSensorsInfo* info);
 
 protected:
 	unsigned char br;
@@ -32,4 +36,11 @@ protected:
 	bool CheckButtonStatus();
 	uint8_t prevButtonState;
 };
+
+struct CSensorsInfo
+{
+	unsigned short FrontLightSensor;
+	unsigned short BackLightSensor;
+};
+
 

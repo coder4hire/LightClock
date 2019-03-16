@@ -16,12 +16,17 @@ enum EPacketType
 	PACK_EnableScheduleItem = 6,
 	PACK_SetVolume = 7,
 	PACK_GetConfig = 8,
-	PACK_SaveConfig = 9,
-	PACK_SetManualColor = 10,
+	PACK_SetConfig = 9,
+	PACK_SetManualColor = 0xA,
+	PACK_GetSensorsInfo=0xB,
+	PACK_PlayMusic = 0xC,
+	PACK_StopMusic = 0xD,
+
 	PACK_SimpleAck=0x40,
 	PACK_ScheduleRecv=0x41,
 	PACK_TimeRecv=0x44,
-	PACK_ConfigRecv = 0x48
+	PACK_ConfigRecv = 0x48,
+	PACK_SensorsInfoRecv = 0x4B
 };
 
 struct BTPacketHeader
@@ -58,8 +63,6 @@ public:
 
 	uint32_t CRC32(const uint8_t * buf, size_t len, uint32_t crc=0);
 	bool IsConnected;
-	bool SendConfig(CBoardConfig * pConfig);
-	bool LoadConfig(CBoardConfig * pConfig);
 
 	void Listen(){ if(!BTSerial.isListening()) BTSerial.listen(); }
 	void ProcessBTCommands();
@@ -90,9 +93,14 @@ protected:
 	void OnEnableScheduleItem(BTPacketHeader * pHeader, void * pPayload);
 	void OnStopAlarm(BTPacketHeader * pHeader, void * pPayload);
 	void OnSetManualColor(BTPacketHeader * pHeader, void * pPayload);
-
-	size_t FinalizePacketAndWrite(uint8_t* buffer, EPacketType packetType, uint32_t packetID, uint16_t payloadLength);
+	void OnSetConfig(BTPacketHeader * pHeader, void * pPayload);
+	void OnPlayStop(BTPacketHeader * pHeader, bool shouldPlay);
+	void OnSetVolume(BTPacketHeader * pHeader, void * pPayload);
+	bool SendSensorsInfo(uint32_t packetID);
 	bool SendSchedule(uint32_t packetID);
 	bool SendTime(uint32_t packetID);
 	bool SendSimpleAck(uint32_t packetID);
+	bool SendConfig(uint32_t packetID);
+
+	size_t FinalizePacketAndWrite(uint8_t* buffer, EPacketType packetType, uint32_t packetID, uint16_t payloadLength);
 };
