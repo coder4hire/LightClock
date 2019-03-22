@@ -124,6 +124,7 @@ void CBTInterface::ProcessBTCommands()
 			OnStopAlarm(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
 		case PACK_GetConfig:
+			CMain::Inst.Player.SetVolume(CBoardConfig::Inst.Volume); // Setting player volume to configured state
 			SendConfig(pHeader->PacketID);
 			break;
 		case PACK_SetConfig:
@@ -297,7 +298,9 @@ void  CBTInterface::OnSetConfig(BTPacketHeader * pHeader, void * pPayload)
 
 void CBTInterface::OnSetVolume(BTPacketHeader * pHeader, void * pPayload)
 {
-	CMain::Inst.Player.SetVolume(CBoardConfig::Inst.Volume);
+	int newVolume = *(unsigned char*)pPayload;
+	CMain::Inst.Player.SetVolume(newVolume);
+	CBoardConfig::Inst.Volume = newVolume;
 	SendSimpleAck(pHeader->PacketID);
 }
 

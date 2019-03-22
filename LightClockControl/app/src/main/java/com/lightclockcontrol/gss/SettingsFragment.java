@@ -33,8 +33,12 @@ import app.akexorcist.bluetotohspp.library.DeviceList;
 public class SettingsFragment extends Fragment {
 
     Button btnSync;
+    Button btnSave;
+    Button btnReset;
+    ImageButton btnGetSensorsInfo;
     TextView txtClockTime;
     TextView txtConnectedDeviceName;
+    TextView txtSensorsInfo;
     Timer timer = null;
     boolean isPlayBtnShown=true;
 
@@ -57,6 +61,10 @@ public class SettingsFragment extends Fragment {
         btnSync = (Button) view.findViewById(R.id.btnSyncClock);
         txtClockTime = (TextView) view.findViewById(R.id.txtClockTime);
         txtConnectedDeviceName = (TextView)view.findViewById(R.id.txtConnectedDeviceName);
+        txtSensorsInfo = (TextView)view.findViewById(R.id.txtSensorsInfo);
+        btnGetSensorsInfo = (ImageButton) view.findViewById(R.id.btnGetSensorsInfo);
+        btnSave = (Button) view.findViewById(R.id.btnSave);
+        btnReset = (Button) view.findViewById(R.id.btnReset);
 
         final ImageButton btnPlayStop = (ImageButton)view.findViewById(R.id.btnPlayStop);
         final SeekBar seekVolume = (SeekBar)view.findViewById(R.id.seekVolume);
@@ -103,6 +111,13 @@ public class SettingsFragment extends Fragment {
                         isPlayBtnShown? "@android:drawable/ic_media_play" : "@android:drawable/ic_media_stop",
                         null, null);
                 btnPlayStop.setImageResource(id);
+            }
+        });
+
+        btnGetSensorsInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BTInterface.GetInstance().SendGetSensorsInfo();
             }
         });
 
@@ -175,6 +190,12 @@ public class SettingsFragment extends Fragment {
             txtClockTime.setText(dateFormat.format(dateTime));
         }
     }
+
+    public void ShowSensorsInfo(String info)
+    {
+        txtSensorsInfo.setText(info);
+    }
+
 
     public void ShowBTDeviceName(String name)
     {

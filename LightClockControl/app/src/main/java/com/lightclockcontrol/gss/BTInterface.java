@@ -243,6 +243,11 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.StopMusic),false);
     }
 
+    public boolean SendGetSensorsInfo()
+    {
+        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.GetSensorsInfo),true);
+    }
+
     @Override
     public void OnAcknowledged(int packetID) {
         lock.lock();

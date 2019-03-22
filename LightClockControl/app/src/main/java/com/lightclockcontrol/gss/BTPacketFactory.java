@@ -254,7 +254,18 @@ public class BTPacketFactory {
                     if(MainActivity.uiHandler!=null) {
                         MainActivity.uiHandler.obtainMessage(MainActivity.MSG_UPDATE_CLOCK_TIME, dateTime, 0).sendToTarget();
                     }
-
+                    break;
+                case SensorsInfoRecv:
+                    if (awaitingID != packetID) {
+                        return payloadSize + HeaderSize + CRCSize; // wrong packet ID for this type, skip the packet
+                    }
+                    short frontSensor = ReadShortFromArray(data,HeaderSize);
+                    short backSensor = ReadShortFromArray(data,HeaderSize+2);
+                    if(MainActivity.uiHandler!=null) {
+                        MainActivity.uiHandler.obtainMessage(MainActivity.MSG_SENSORS_INFO,
+                                "Front:"+Short.toString(frontSensor)+ " Back:"+Short.toString(frontSensor)).sendToTarget();
+                    }
+                    break;
             }
         }
 

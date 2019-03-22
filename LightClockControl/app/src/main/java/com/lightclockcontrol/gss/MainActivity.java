@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int MSG_UPDATE_SCHEDULE = 0x41;
     public static final int MSG_UPDATE_CLOCK_TIME = 0x44;
     public static final int MSG_BT_CONNECTED = 0x100;
+    public static final int MSG_SENSORS_INFO = 0x4B;
 
     static public Handler uiHandler;
 
@@ -43,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.navigation_settings:
                     mgr.beginTransaction().replace(R.id.fragmentContent,settingsFragment).commit();
                     return true;
-
                 case R.id.mute_alarm:
                     BTInterface.GetInstance().SendStopAlarm();
                     return false;
@@ -86,6 +86,10 @@ public class MainActivity extends AppCompatActivity {
                         break;
                     case MSG_BT_CONNECTED:
                         settingsFragment.ShowBTDeviceName(msg.obj.toString());
+                        break;
+                    case MSG_SENSORS_INFO:
+                        settingsFragment.ShowBTDeviceName(msg.obj.toString());
+                        break;
                 }
             }
         };
