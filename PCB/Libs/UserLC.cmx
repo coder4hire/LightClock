@@ -23,4 +23,5 @@ PC827||#DIL=8=8DIL||@[Description]=Opto-isolator,SFH615A-2 5300Vac DIP4||@Manufa
 PowerSocket||#DSC=3=PowerSocket||@Manufacturer_Part_Number=||@Manufacturer_Name=||@RS Part Number=||@Allied_Number=||@Other Part Number=||@3D Package=||@Height=
 Relay5Vx10A||#RELAY_JW1C=-1=RELAY_JW1C||@[Description]=RELAY JW1FSN-DC5V||@Vendor=Panasonic||@Manufacturer_Part_Number=JW1FSN-DC5V||@Family=Unknown||@Manufacturer_Name=Panasonic||@RS Part Number=3998398||@Allied_Number=||@Other Part Number=||@3D Package=||@Height=
 ResArray10||#DIP=10=ResArray10||@RS Part Number=||@Allied_Number=||@Manufacturer_Name=||@Manufacturer_Part_Number=||@Other Part Number=||@3D Package=||@Height=||@R=
+StepDownConverter||#DIL=4=stepDownConverter||@Manufacturer_Part_Number=||@Manufacturer_Name=||@RS Part Number=||@Allied_Number=||@Other Part Number=||@3D Package=||@Height=
 TinyRTC_DS1307||#DIL=12=TinyRTC_DS1307||@[Description]=Realtime clock module||@Manufacturer_Part_Number=||@Manufacturer_Name=||@RS Part Number=||@Allied_Number=||@Other Part Number=||@3D Package=||@Height=
