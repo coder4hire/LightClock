@@ -97,6 +97,14 @@ void CBTInterface::OnBTCharReceived(uint8_t c)
 	cmdTailIndex = (cmdTailIndex + 1) % CMD_MAX_SIZE;
 }
 
+void CBTInterface::VisualConfirmation(CScheduleItem::EEffectType type)
+{
+	if (CBoardConfig::Inst.AreVisualConfirmationsEnabled && !CScheduler::Inst.IsCurrentEffectRunning())
+	{
+		CScheduler::Inst.RunEffectNow(type,1);
+	}
+}
+
 void CBTInterface::ProcessBTCommands()
 {
 	Listen();
@@ -107,6 +115,7 @@ void CBTInterface::ProcessBTCommands()
 		{
 		case PACK_ScheduleUpdate:
 			OnScheduleUpdate(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			VisualConfirmation(CScheduleItem::EF_DARK_GREEN);
 			break;
 		case PACK_GetSchedule:
 			SendSchedule(pHeader->PacketID);
@@ -116,12 +125,18 @@ void CBTInterface::ProcessBTCommands()
 			break;
 		case PACK_SetTime:
 			OnSetTime(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			VisualConfirmation(CScheduleItem::EF_DARK_GREEN);
 			break;
 		case PACK_EnableScheduleItem:
 			OnEnableScheduleItem(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			VisualConfirmation(CScheduleItem::EF_DARK_GREEN);
 			break;
 		case PACK_StopAlarm:
 			OnStopAlarm(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			VisualConfirmation(CScheduleItem::EF_DARK_BLUE);
+			break;
+		case PACK_SetVolume:
+			OnSetVolume(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
 		case PACK_GetConfig:
 			CMain::Inst.Player.SetVolume(CBoardConfig::Inst.Volume); // Setting player volume to configured state
@@ -129,20 +144,23 @@ void CBTInterface::ProcessBTCommands()
 			break;
 		case PACK_SetConfig:
 			OnSetConfig(pHeader, rcvdCmd + sizeof(BTPacketHeader));
+			VisualConfirmation(CScheduleItem::EF_DARK_GREEN);
 			break;
 		case PACK_SetManualColor:
 			OnSetManualColor(pHeader, rcvdCmd + sizeof(BTPacketHeader));
 			break;
 		case PACK_GetSensorsInfo:
 			SendSensorsInfo(pHeader->PacketID);
+			VisualConfirmation(CScheduleItem::EF_DARK_BLUE);
 			break;
 		case PACK_PlayMusic:
 			OnPlayStop(pHeader,true);
+			VisualConfirmation(CScheduleItem::EF_DARK_GREEN);
 			break;
 		case PACK_StopMusic:
 			OnPlayStop(pHeader, false);
+			VisualConfirmation(CScheduleItem::EF_DARK_RED);
 			break;
-
 		}
 	}
 

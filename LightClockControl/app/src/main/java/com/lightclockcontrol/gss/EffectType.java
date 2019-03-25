@@ -3,7 +3,12 @@ package com.lightclockcontrol.gss;
 public enum EffectType {
     None(0,"None"),
     Sunrise(1,"Sunrise"),
-    Red(2,"Red");
+    DarkRed(2,"Dark Red"),
+    Red(3,"Red"),
+    DarkGreen(4,"Dark Green"),
+    Green(5,"Green"),
+    DarkBlue(6,"Dark Blue"),
+    Blue(7,"Blue");
 
     private final int value;
     private final String description;

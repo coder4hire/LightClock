@@ -7,6 +7,7 @@ struct CBoardConfigItems
 	unsigned short LightThresholdBack;
 	bool IsStopLightEnabled;
 	bool DoesBackligthDisableRGB;
+	bool AreVisualConfirmationsEnabled;
 };
 
 class CBoardConfig : public CBoardConfigItems

@@ -20,8 +20,10 @@ public:
 	bool EnableScheduleItem(uint8_t index, bool isEnabled);
 
 	void OnTimeTick();
-	void TestRunEffect(CScheduleItem::EEffectType effect);
+	void RunEffectNow(CScheduleItem::EEffectType effect,int maxLength=600, bool enableRandomMusic=false);
 	void StopEffects();
+
+	bool IsCurrentEffectRunning() { return currectEffect.IsRunning(); }
 
 protected:
 	CScheduler();

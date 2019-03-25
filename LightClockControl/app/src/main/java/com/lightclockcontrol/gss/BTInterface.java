@@ -243,9 +243,19 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
         return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.StopMusic),false);
     }
 
-    public boolean SendGetSensorsInfo()
+    public boolean SendGetSensorsInfoPacket()
     {
         return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.GetSensorsInfo),true);
+    }
+
+    public boolean SendSetConfigPacket(BoardConfig cfg)
+    {
+        return SendPacket(packetFactory.CreateSetConfigPacket(cfg),true);
+    }
+
+    public boolean SendGetConfigPacket()
+    {
+        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.GetConfig),false);
     }
 
     @Override

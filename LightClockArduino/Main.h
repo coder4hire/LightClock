@@ -22,6 +22,8 @@ public:
 	void Setup();
 	void Loop();
 
+	short GetFrontSensorReadings();
+	short GetBackSensorReadings();
 	void GetSensorsInfo(CSensorsInfo* info);
 
 protected:
@@ -35,6 +37,7 @@ protected:
 
 	bool CheckButtonStatus();
 	uint8_t prevButtonState;
+	short lastFrontReadings;
 };
 
 struct CSensorsInfo

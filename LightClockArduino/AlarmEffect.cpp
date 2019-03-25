@@ -1,6 +1,7 @@
 #include "AlarmEffect.h"
 #include "Main.h"
 #include "RGBControl.h"
+#include "BoardConfig.h"
 
 CAlarmEffect::CAlarmEffect()
 {
@@ -24,7 +25,7 @@ void CAlarmEffect::OnTimeTick()
 	time_t now = CMain::Inst.RTC.now().unixtime();
 	if (activationTime != 0)
 	{
-		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 && !isSoundOn)
+		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 && !isSoundOn && maxSongLength>0)
 		{
 			isSoundOn = true;
 			if (folderID == 255)
@@ -44,22 +45,22 @@ void CAlarmEffect::OnTimeTick()
 			case CScheduleItem::EF_SUNRISE:
 				SunriseTimeTick(now);
 				break;
-			case CScheduleItem::EF_RED:
+			case CScheduleItem::EF_DARK_RED:
 				CRGBControl::Inst.SetRGBW(RGBW(1,0,0,0));
 				break;
-			case CScheduleItem::EF_GREEN:
+			case CScheduleItem::EF_DARK_GREEN:
 				CRGBControl::Inst.SetRGBW(RGBW(0, 1, 0, 0));
 				break;
-			case CScheduleItem::EF_BLUE:
+			case CScheduleItem::EF_DARK_BLUE:
 				CRGBControl::Inst.SetRGBW(RGBW(0, 0, 1, 0));
 				break;
-			case CScheduleItem::EF_RED_HIGH:
+			case CScheduleItem::EF_RED:
 				CRGBControl::Inst.SetRGBW(RGBW(255, 0, 0, 0));
 				break;
-			case CScheduleItem::EF_GREEN_HIGH:
+			case CScheduleItem::EF_GREEN:
 				CRGBControl::Inst.SetRGBW(RGBW(0, 255, 0, 0));
 				break;
-			case CScheduleItem::EF_BLUE_HIGH:
+			case CScheduleItem::EF_BLUE:
 				CRGBControl::Inst.SetRGBW(RGBW(0, 0, 255, 0));
 				break;
 
@@ -72,7 +73,9 @@ void CAlarmEffect::OnTimeTick()
 			isSoundOn = false;
 		}
 
-		if (now >= activationTime + prerollTime + maxLightLength && isLightOn)
+		if ((now >= activationTime + prerollTime + maxLightLength) ||
+			(CBoardConfig::Inst.DoesBackligthDisableRGB && CMain::Inst.GetBackSensorReadings()>CBoardConfig::Inst.LightThresholdBack)
+			&& isLightOn )
 		{
 			isLightOn = false;
 			CRGBControl::Inst.SetRGBW(0);

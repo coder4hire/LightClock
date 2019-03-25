@@ -2,6 +2,7 @@
 
 #include "BoardConfig.h"
 #include "NeoSWSerial.h"
+#include "ScheduleItem.h"
 
 #define CMD_MAX_SIZE 128
 
@@ -85,6 +86,8 @@ protected:
 
 	static void HandleBTChar(uint8_t c);
 	void OnBTCharReceived(uint8_t c);
+
+	void VisualConfirmation(CScheduleItem::EEffectType type);
 
 	bool CheckForCompleteCommand();
 

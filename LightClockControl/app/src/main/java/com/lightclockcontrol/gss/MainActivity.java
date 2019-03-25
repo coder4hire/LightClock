@@ -24,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int MSG_UPDATE_SCHEDULE = 0x41;
     public static final int MSG_UPDATE_CLOCK_TIME = 0x44;
     public static final int MSG_BT_CONNECTED = 0x100;
+    public static final int MSG_UPDATE_CONFIG = 0x48;
     public static final int MSG_SENSORS_INFO = 0x4B;
 
     static public Handler uiHandler;
@@ -88,7 +89,10 @@ public class MainActivity extends AppCompatActivity {
                         settingsFragment.ShowBTDeviceName(msg.obj.toString());
                         break;
                     case MSG_SENSORS_INFO:
-                        settingsFragment.ShowBTDeviceName(msg.obj.toString());
+                        settingsFragment.ShowSensorsInfo(msg.obj.toString());
+                        break;
+                    case MSG_UPDATE_CONFIG:
+                        settingsFragment.UpdateConfig((BoardConfig)msg.obj);
                         break;
                 }
             }

@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -39,8 +40,13 @@ public class SettingsFragment extends Fragment {
     TextView txtClockTime;
     TextView txtConnectedDeviceName;
     TextView txtSensorsInfo;
+    TextView txtBacklightThreshold;
     Timer timer = null;
     boolean isPlayBtnShown=true;
+    SeekBar seekVolume;
+    CheckBox chkBacklightDisablesRGB;
+    CheckBox chkFrontLightStopsAlarm;
+    CheckBox chkVisualConfirmation;
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -62,12 +68,16 @@ public class SettingsFragment extends Fragment {
         txtClockTime = (TextView) view.findViewById(R.id.txtClockTime);
         txtConnectedDeviceName = (TextView)view.findViewById(R.id.txtConnectedDeviceName);
         txtSensorsInfo = (TextView)view.findViewById(R.id.txtSensorsInfo);
+        txtBacklightThreshold = (TextView)view.findViewById(R.id.txtBackThresh);
         btnGetSensorsInfo = (ImageButton) view.findViewById(R.id.btnGetSensorsInfo);
         btnSave = (Button) view.findViewById(R.id.btnSave);
         btnReset = (Button) view.findViewById(R.id.btnReset);
+        chkBacklightDisablesRGB = (CheckBox)view.findViewById(R.id.chkBacklightDisablesRGB);
+        chkFrontLightStopsAlarm = (CheckBox)view.findViewById(R.id.chkFrontLightStopsAlarm);
+        chkVisualConfirmation = (CheckBox)view.findViewById(R.id.chkVisualConfirmation);
 
         final ImageButton btnPlayStop = (ImageButton)view.findViewById(R.id.btnPlayStop);
-        final SeekBar seekVolume = (SeekBar)view.findViewById(R.id.seekVolume);
+        seekVolume = (SeekBar)view.findViewById(R.id.seekVolume);
 
         txtConnectedDeviceName.setText(BTInterface.GetInstance().GetConnectedDeviceName());
 
@@ -117,7 +127,7 @@ public class SettingsFragment extends Fragment {
         btnGetSensorsInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BTInterface.GetInstance().SendGetSensorsInfo();
+                BTInterface.GetInstance().SendGetSensorsInfoPacket();
             }
         });
 
@@ -135,6 +145,36 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 BTInterface.GetInstance().SendSetVolumePacket(seekBar.getProgress());
+            }
+        });
+
+        btnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BoardConfig cfg = new BoardConfig();
+                cfg.Volume = (byte)seekVolume.getProgress();
+                try {
+                    cfg.LightThresholdBack = Short.parseShort(txtBacklightThreshold.getText().toString());
+                }
+                catch(Exception e)
+                {
+                    cfg.LightThresholdBack = 800;
+                }
+                cfg.DoesBackligthDisableRGB = chkBacklightDisablesRGB.isChecked();
+                cfg.IsStopLightEnabled = chkFrontLightStopsAlarm.isChecked();
+                cfg.AreVisualConfirmationsEnabled = chkVisualConfirmation.isChecked();
+
+                if(!BTInterface.GetInstance().SendSetConfigPacket(cfg))
+                {
+                    Toast.makeText(getActivity(),"Cannot save configuration",Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        btnReset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BTInterface.GetInstance().SendGetConfigPacket();
             }
         });
 
@@ -166,6 +206,7 @@ public class SettingsFragment extends Fragment {
                 }
             },0,1000);
         }
+        BTInterface.GetInstance().SendGetConfigPacket();
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -202,5 +243,13 @@ public class SettingsFragment extends Fragment {
         if(txtConnectedDeviceName!=null) {
             txtConnectedDeviceName.setText(name);
         }
+    }
+
+    public void UpdateConfig(BoardConfig cfg) {
+        seekVolume.setProgress(cfg.Volume);
+        txtBacklightThreshold.setText(cfg.LightThresholdBack);
+        chkBacklightDisablesRGB.setChecked(cfg.DoesBackligthDisableRGB);
+        chkFrontLightStopsAlarm.setChecked(cfg.IsStopLightEnabled);
+        chkVisualConfirmation.setChecked(cfg.AreVisualConfirmationsEnabled);
     }
 }
