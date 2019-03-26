@@ -25,7 +25,8 @@ void CAlarmEffect::OnTimeTick()
 	time_t now = CMain::Inst.RTC.now().unixtime();
 	if (activationTime != 0)
 	{
-		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 && !isSoundOn && maxSongLength>0)
+		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 
+			&& !isSoundOn && maxSongLength>0)
 		{
 			isSoundOn = true;
 			if (folderID == 255)
@@ -99,6 +100,7 @@ void CAlarmEffect::Start(CScheduleItem item)
 	activationTime = CMain::Inst.RTC.now().unixtime();
 	activationMillis = millis();
 	isLightOn = true;
+	isSoundOn = false;
 
 	songID = item.SongID;
 	folderID = item.FolderID;
@@ -114,7 +116,11 @@ void CAlarmEffect::Stop()
 	isLightOn = false;
 	isSoundOn = false;
 	CRGBControl::Inst.SetRGBW(0);
-	CMain::Inst.Player.Stop();
+
+	if (maxSongLength > 0 || isSoundOn)
+	{
+		CMain::Inst.Player.Stop();
+	}
 }
 
 void CAlarmEffect::SunriseTimeTick(time_t now)

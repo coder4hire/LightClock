@@ -318,7 +318,6 @@ void CBTInterface::OnSetVolume(BTPacketHeader * pHeader, void * pPayload)
 {
 	int newVolume = *(unsigned char*)pPayload;
 	CMain::Inst.Player.SetVolume(newVolume);
-	CBoardConfig::Inst.Volume = newVolume;
 	SendSimpleAck(pHeader->PacketID);
 }
 
@@ -387,6 +386,7 @@ size_t CBTInterface::FinalizePacketAndWrite(uint8_t* buffer,EPacketType packetTy
 	*(BTPacketHeader*)buffer = BTPacketHeader(packetType, packetID);
 	((BTPacketHeader*)buffer)->PayloadLength = payloadLength;
 	*(uint32_t*)(buffer + sizeof(BTPacketHeader) + payloadLength) = CRC32((const uint8_t*)buffer, sizeof(BTPacketHeader) + payloadLength);
+	BTSerial.listen();
 	return BTSerial.write(buffer, BUF_OVERHEAD + payloadLength);
 }
 

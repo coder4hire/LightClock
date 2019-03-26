@@ -181,9 +181,9 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
             if (waitForResponse) {
                 try {
                     lock.lock();
-                    for (int i = 0; i < 10; i++) {
+                    for (int i = 0; i < 5; i++) {
                         SendData(data);
-                        if (acknowledged.await(1000, TimeUnit.MILLISECONDS)) {
+                        if (acknowledged.await(2000, TimeUnit.MILLISECONDS)) {
                             lock.unlock();
                             return true;
                         }
@@ -193,6 +193,7 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
                 }
             } else {
                 SendData(data);
+                return true;
             }
         }
         return false;
@@ -255,7 +256,7 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
     public boolean SendGetConfigPacket()
     {
-        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.GetConfig),false);
+        return SendPacket(packetFactory.CreateSimplePacket(PacketTypes.GetConfig),true);
     }
 
     @Override

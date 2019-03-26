@@ -186,6 +186,7 @@ public class BTPacketFactory {
         WriteToArray(cfg.LightThresholdBack);
         WriteToArray(cfg.IsStopLightEnabled);
         WriteToArray(cfg.DoesBackligthDisableRGB);
+        WriteToArray(cfg.AreVisualConfirmationsEnabled);
         bytesArray.set(10, (byte) (bytesArray.size() - HeaderSize)); // Setting size, payload only
         int crc = CalcCRC();
         WriteToArray(crc);

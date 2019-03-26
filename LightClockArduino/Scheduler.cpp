@@ -86,15 +86,15 @@ void CScheduler::OnTimeTick()
 
 void CScheduler::RunEffectNow(CScheduleItem::EEffectType effect, int maxLength, bool enableRandomMusic)
 {
-	CScheduleItem testItem;
-	testItem.EffectType = (uint8_t)effect;
-	testItem.FolderID = 255;
-	testItem.SongID = 0;
-	testItem.LightEnabledTime = maxLength;
-	testItem.SoundEnabledTime = enableRandomMusic ? maxLength : 0;
+	CScheduleItem item;
+	item.EffectType = (uint8_t)effect;
+	item.FolderID = 255;
+	item.SongID = 0;
+	item.LightEnabledTime = maxLength;
+	item.SoundEnabledTime = enableRandomMusic ? maxLength : 0;
 
 	currentEffectScheduleIdx = -1;
-	currectEffect.Start(testItem);
+	currectEffect.Start(item);
 }
 
 void CScheduler::StopEffects()

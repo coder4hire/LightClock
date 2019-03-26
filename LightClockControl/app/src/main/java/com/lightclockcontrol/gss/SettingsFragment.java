@@ -97,10 +97,7 @@ public class SettingsFragment extends Fragment {
             public void onClick(View v) {
                 Calendar cal = Calendar.getInstance();
                 int localTime = (int)((cal.getTimeInMillis()+cal.get(Calendar.ZONE_OFFSET)+cal.get(Calendar.DST_OFFSET))/1000);
-                if(!BTInterface.GetInstance().SendSetTime(localTime))
-                {
-                    Toast.makeText(getActivity(),R.string.toast_cannot_save,Toast.LENGTH_LONG).show();
-                }
+                BTInterface.GetInstance().SendSetTime(localTime);
             }
         });
 
@@ -127,6 +124,7 @@ public class SettingsFragment extends Fragment {
         btnGetSensorsInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                txtSensorsInfo.setText("---Reading sensors---");
                 BTInterface.GetInstance().SendGetSensorsInfoPacket();
             }
         });
@@ -166,7 +164,11 @@ public class SettingsFragment extends Fragment {
 
                 if(!BTInterface.GetInstance().SendSetConfigPacket(cfg))
                 {
-                    Toast.makeText(getActivity(),"Cannot save configuration",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(),"Cannot save configuration. Please check connection.",Toast.LENGTH_LONG).show();
+                }
+                else
+                {
+                    Toast.makeText(getActivity(),"Configuration is saved.",Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -174,7 +176,10 @@ public class SettingsFragment extends Fragment {
         btnReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BTInterface.GetInstance().SendGetConfigPacket();
+                if(!BTInterface.GetInstance().SendGetConfigPacket())
+                {
+                    Toast.makeText(getActivity(),"Cannot load configuration. Please check connection.",Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -195,6 +200,12 @@ public class SettingsFragment extends Fragment {
     public void onResume()
     {
         super.onResume();
+
+        if(!BTInterface.GetInstance().SendGetConfigPacket())
+        {
+            Toast.makeText(getActivity(),"Cannot load configuration. Please check connection.",Toast.LENGTH_LONG).show();
+        }
+
         // Setting up timer
         if(timer==null)
         {
@@ -206,7 +217,6 @@ public class SettingsFragment extends Fragment {
                 }
             },0,1000);
         }
-        BTInterface.GetInstance().SendGetConfigPacket();
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -246,8 +256,8 @@ public class SettingsFragment extends Fragment {
     }
 
     public void UpdateConfig(BoardConfig cfg) {
-        seekVolume.setProgress(cfg.Volume);
-        txtBacklightThreshold.setText(cfg.LightThresholdBack);
+        seekVolume.setProgress(cfg.Volume <0 ? 256+cfg.Volume : cfg.Volume);
+        txtBacklightThreshold.setText(Short.toString(cfg.LightThresholdBack));
         chkBacklightDisablesRGB.setChecked(cfg.DoesBackligthDisableRGB);
         chkFrontLightStopsAlarm.setChecked(cfg.IsStopLightEnabled);
         chkVisualConfirmation.setChecked(cfg.AreVisualConfirmationsEnabled);
