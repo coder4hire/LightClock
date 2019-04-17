@@ -265,7 +265,7 @@ public class BTPacketFactory {
                     short backSensor = ReadShortFromArray(data, HeaderSize + 2);
                     if (MainActivity.uiHandler != null) {
                         MainActivity.uiHandler.obtainMessage(MainActivity.MSG_SENSORS_INFO,
-                                "Front:" + Short.toString(frontSensor) + " Back:" + Short.toString(frontSensor)).sendToTarget();
+                                "Front:" + Short.toString(frontSensor) + " Back:" + Short.toString(backSensor)).sendToTarget();
                     }
                     break;
 
