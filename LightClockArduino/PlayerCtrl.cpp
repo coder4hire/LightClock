@@ -26,14 +26,19 @@ void CPlayerCtrl::Init()
 void CPlayerCtrl::PlayRandom()
 {
 	ListenPort();
+	dfPlayer.stop();
 	dfPlayer.randomAll();
+	dfPlayer.next();
 	dfPlayer.start();
 }
 
 void CPlayerCtrl::PlaySong(uint8_t folderID, uint8_t songID)
 {
+	// Both folderID and songID should be 1-based
 	ListenPort();
-	dfPlayer.playFolder(folderID, songID);
+	dfPlayer.stop();
+	dfPlayer.playFolder(folderID,songID);
+	dfPlayer.start();
 }
 
 void CPlayerCtrl::Play()

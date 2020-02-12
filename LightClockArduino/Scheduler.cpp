@@ -69,7 +69,6 @@ void CScheduler::OnTimeTick()
 			time_t futureTimeNoDate = pParsedFuture->tm_hour * 3600l + pParsedFuture->tm_min * 60 + pParsedFuture->tm_sec;
 
 			// Checking if item is to be executed
-
 			if (((1 << pParsedFuture->tm_wday) & pItem->DayOfWeekMask)
 				&& futureTimeNoDate >= pItem->ExecTime && futureTimeNoDate <= pItem->ExecTime + prerollTime + 3 &&
 				(currentEffectScheduleIdx != i || !currectEffect.IsRunning()))

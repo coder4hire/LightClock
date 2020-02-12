@@ -318,8 +318,9 @@ void DFRobotDFPlayerMini::EQ(uint8_t eq) {
   sendStack(0x07, eq);
 }
 
-void DFRobotDFPlayerMini::loop(int fileNumber) {
-  sendStack(0x08, fileNumber);
+void DFRobotDFPlayerMini::loop(int loopMode) {
+    // 0 - repeat/1 - single repeat/2 - folder repeat/3 - random
+  sendStack(0x08, loopMode);
 }
 
 void DFRobotDFPlayerMini::outputDevice(uint8_t device) {

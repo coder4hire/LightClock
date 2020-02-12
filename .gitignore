@@ -53,3 +53,5 @@ dkms.conf
 __vm/
 PCB/~*
 .vs
+LightClockArduino/Debug
+LightClockArduino/Release

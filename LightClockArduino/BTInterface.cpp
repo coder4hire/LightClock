@@ -262,6 +262,7 @@ void CBTInterface::OnScheduleUpdate(BTPacketHeader* pHeader, void* pPayload)
 	{
 		CScheduleItem* item = (CScheduleItem*)pPayload;
 		CScheduler::Inst.UpdateScheduleItem(*item);
+		CScheduler::Inst.StopEffects();
 
 		// Send back reply
 		SendSchedule(pHeader->PacketID);

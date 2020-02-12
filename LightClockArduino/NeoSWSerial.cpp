@@ -162,7 +162,6 @@ void NeoSWSerial::listen()
     rxState  = WAITING_FOR_START_BIT;
     rxHead   = rxTail = 0;    // no characters in buffer
     flush();
-	Serial.println("!!!!!!!!!!!!");
 
     // Set up timings based on baud rate
     

@@ -25,17 +25,27 @@ void CAlarmEffect::OnTimeTick()
 	time_t now = CMain::Inst.RTC.now().unixtime();
 	if (activationTime != 0)
 	{
+			////Serial.print("ActTime");
+			////Serial.print(activationTime);
+			////Serial.print(" Now ");
+			////Serial.println(now);
+
 		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 
 			&& !isSoundOn && maxSongLength>0)
 		{
 			isSoundOn = true;
 			if (folderID == 255)
 			{
+				Serial.println("RandomPlay");
 				CMain::Inst.Player.PlayRandom();
 			}
 			else
 			{
-				CMain::Inst.Player.PlaySong(folderID, songID);
+				if (songID <= 0)
+				{
+					songID = 1;
+				}
+				CMain::Inst.Player.PlaySong(folderID+1, songID);
 			}
 		}
 

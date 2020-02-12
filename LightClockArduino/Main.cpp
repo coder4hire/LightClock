@@ -35,7 +35,7 @@ void CMain::Setup()
 	RTC.begin();
 	if (!RTC.isrunning()) {
 		Serial.println("RTC is NOT running!");
-		//RTC.adjust(DateTime(__DATE__, __TIME__));
+		RTC.adjust(DateTime(__DATE__, __TIME__));
 	}
 	else
 	{
@@ -144,7 +144,7 @@ void CMain::Loop()
 	{ 
 		CScheduler::Inst.StopEffects();
 	}
-	lastFrontReadings =frontReadings;
+	lastFrontReadings=frontReadings;
 
 	// Check for remote control button pressed
 	IR_ACTIONS actionButton = IRControl::Inst.GetButtonPressed();
@@ -231,8 +231,18 @@ void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)
 	case IR_OK:
 		Player.PlayRandom();
 		break;
+	case IR_POWER:
 	case IR_CANCEL:
 		CScheduler::Inst.StopEffects();
+		break;
+	case IR_REPEAT:
+		Player.PlaySong(3,1);
+		break;
+	case IR_PLAY:
+		Player.Play();
+		break;
+	case IR_STOP:
+		Player.Stop();
 		break;
 	}
 }
