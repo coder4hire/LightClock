@@ -40,6 +40,9 @@ void DFRobotDFPlayerMini::sendStack(){
     }
   }
 
+  _receivedIndex = 0;
+  _isAvailable = false;
+
 #ifdef _DEBUG
   Serial.println();
   Serial.print(F("sending:"));

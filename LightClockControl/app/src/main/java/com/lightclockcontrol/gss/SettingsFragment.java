@@ -256,7 +256,7 @@ public class SettingsFragment extends Fragment {
     }
 
     public void UpdateConfig(BoardConfig cfg) {
-        seekVolume.setProgress(cfg.Volume <0 ? 256+cfg.Volume : cfg.Volume);
+        seekVolume.setProgress(cfg.Volume <0 ? 0 : cfg.Volume);
         txtBacklightThreshold.setText(Short.toString(cfg.LightThresholdBack));
         chkBacklightDisablesRGB.setChecked(cfg.DoesBackligthDisableRGB);
         chkFrontLightStopsAlarm.setChecked(cfg.IsStopLightEnabled);
