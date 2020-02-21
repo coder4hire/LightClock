@@ -84,8 +84,8 @@ void CAlarmEffect::OnTimeTick()
 			isSoundOn = false;
 		}
 
-		if ((now >= activationTime + prerollTime + maxLightLength) ||
-			(CBoardConfig::Inst.DoesBackligthDisableRGB && CMain::Inst.GetBackSensorReadings()>CBoardConfig::Inst.LightThresholdBack)
+		if (((now >= activationTime + prerollTime + maxLightLength) ||
+			(CBoardConfig::Inst.DoesBackligthDisableRGB && CMain::Inst.GetBackSensorReadings()>CBoardConfig::Inst.LightThresholdBack))
 			&& isLightOn )
 		{
 			isLightOn = false;

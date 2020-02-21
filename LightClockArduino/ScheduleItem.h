@@ -22,5 +22,5 @@ public:
 	uint8_t SongID;
 	int32_t LightEnabledTime;
 	int32_t SoundEnabledTime;
-	uint8_t DayOfWeekMask = 0;
+	uint8_t DayOfWeekMask;
 };

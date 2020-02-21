@@ -127,7 +127,6 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
             isEnabled = in.readByte() != 0;
             execTime = new Time(in.readLong());
             effectType = EffectType.fromValue(in.readInt());
-            dayOfWeekMask = in.readByte();
             folderID = in.readByte();
             songID = in.readByte();
             lightEnabledTime = in.readInt();
@@ -163,7 +162,6 @@ public class ScheduleViewAdapter extends RecyclerView.Adapter<ScheduleViewAdapte
             dest.writeByte(isEnabled ? (byte)1 : (byte)0);
             dest.writeLong(execTime.getTime());
             dest.writeInt(effectType.getValue());
-            dest.writeByte(dayOfWeekMask);
             dest.writeByte(folderID);
             dest.writeByte(songID);
             dest.writeInt(lightEnabledTime);

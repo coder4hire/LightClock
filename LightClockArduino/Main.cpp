@@ -52,7 +52,7 @@ void CMain::Setup()
 	IRControl::Inst.Begin();
 	CRGBControl::Inst.Init();
 	Player.Init();
-	Player.SetVolume(5);
+	Player.SetVolume(CBoardConfig::Inst.Volume);
 
 	CBTInterface::Inst.Listen();
 
