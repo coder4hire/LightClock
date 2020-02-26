@@ -25,6 +25,7 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
     private final Lock lock = new ReentrantLock();
     private final Condition acknowledged = lock.newCondition();
+    int btState = BluetoothState.STATE_NONE;
 
     static public BTInterface GetInstance() {
         if (instance == null) {
@@ -48,6 +49,7 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
         bt.setBluetoothStateListener(new BluetoothSPP.BluetoothStateListener() {
             public void onServiceStateChanged(int state) {
+                btState = state;
                 if (state == BluetoothState.STATE_CONNECTED)
                     Log.i("Check", "State : Connected");
                 else if (state == BluetoothState.STATE_CONNECTING)
@@ -177,7 +179,7 @@ public class BTInterface implements BluetoothSPP.OnDataReceivedListener, BTPacke
 
     public boolean SendPacket(byte[] data, boolean waitForResponse)
     {
-        if(bt.isBluetoothAvailable()) {
+        if(bt.isBluetoothAvailable() && btState==BluetoothState.STATE_CONNECTED) {
             if (waitForResponse) {
                 try {
                     lock.lock();
