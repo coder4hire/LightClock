@@ -65,7 +65,8 @@ void CScheduler::OnTimeTick()
 		{
 			time_t prerollTime = CAlarmEffect::GetPrerollTime((CScheduleItem::EEffectType) pItem->EffectType);
 			time_t futurePoint = now + prerollTime;
-			tm* pParsedFuture = gmtime(&futurePoint);
+			time_t futurePoint2K = futurePoint-UNIX_OFFSET;
+			tm* pParsedFuture = gmtime(&futurePoint2K);
 			time_t futureTimeNoDate = pParsedFuture->tm_hour * 3600l + pParsedFuture->tm_min * 60 + pParsedFuture->tm_sec;
 
 			// Checking if item is to be executed
