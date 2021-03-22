@@ -20,6 +20,7 @@ enum IR_ACTIONS
 	IR_PLAY,
 	IR_STOP,
 	IR_POWER,
+	IR_LIGHT,
 	IR_MAX
 };
 

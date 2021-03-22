@@ -15,6 +15,7 @@ const PROGMEM unsigned long IRControl::buttonCodes[IR_MAX] =
 	0xFF00FF00, // IR_PLAY
 	0xFE01FF00, // IR_STOP
 	0xB34CFF00, // IR_POWER
+	0x11111111, // IR_LIGHT
 };
 
 IRControl::IRControl()

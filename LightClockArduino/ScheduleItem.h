@@ -11,7 +11,8 @@ public:
 		EF_DARK_GREEN,
 		EF_GREEN,
 		EF_DARK_BLUE,
-		EF_BLUE
+		EF_BLUE,
+		EF_INFINITE_LIGHT
 	};
 
 	uint8_t ID;

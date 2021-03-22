@@ -46,6 +46,7 @@ void CRGBControl::Init()
 	pinMode(PIN_GREEN, OUTPUT);
 	pinMode(PIN_BLUE, OUTPUT);
 	pinMode(PIN_WHITE, OUTPUT);
+	lastValue = RGBW(0);
 
 	// set prescaler to 8 and starts PWM
 	//TCCR0B = TCCR0B &(~7) | 4;
@@ -59,8 +60,12 @@ CRGBControl::~CRGBControl()
 
 void CRGBControl::SetRGBW(RGBW rgbw)
 {
-	analogWrite(PIN_RED, pgm_read_byte(brightness2PWM+rgbw.R));
-	analogWrite(PIN_GREEN, pgm_read_byte(brightness2PWM + rgbw.G));
-	analogWrite(PIN_BLUE, pgm_read_byte(brightness2PWM + rgbw.B));
-	analogWrite(PIN_WHITE, pgm_read_byte(brightness2PWM + rgbw.W));
+	if (lastValue.Data != rgbw.Data || rgbw.Data == 0)
+	{
+		lastValue.Data = rgbw.Data;
+		analogWrite(PIN_RED, pgm_read_byte(brightness2PWM + rgbw.R));
+		analogWrite(PIN_GREEN, pgm_read_byte(brightness2PWM + rgbw.G));
+		analogWrite(PIN_BLUE, pgm_read_byte(brightness2PWM + rgbw.B));
+		analogWrite(PIN_WHITE, pgm_read_byte(brightness2PWM + rgbw.W));
+	}
 }

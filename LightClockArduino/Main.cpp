@@ -244,5 +244,8 @@ void CMain::OnIRButtonPressed(IR_ACTIONS actionButton)
 	case IR_STOP:
 		Player.Stop();
 		break;
+	case IR_LIGHT:
+		CScheduler::Inst.RunEffectNow(CScheduleItem::EF_INFINITE_LIGHT,0);
+		break;
 	}
 }

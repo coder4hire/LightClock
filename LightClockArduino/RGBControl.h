@@ -44,6 +44,7 @@ public:
 protected:
 	static const unsigned char brightness2PWM[256];
 	static const unsigned char brightness2PWMGreen[256];
+	RGBW lastValue;
 	CRGBControl() {}
 };
 

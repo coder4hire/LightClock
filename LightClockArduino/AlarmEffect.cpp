@@ -25,11 +25,14 @@ void CAlarmEffect::OnTimeTick()
 	time_t now = CMain::Inst.RTC.now().unixtime();
 	if (activationTime != 0)
 	{
-			////Serial.print("ActTime");
-			////Serial.print(activationTime);
-			////Serial.print(" Now ");
-			////Serial.println(now);
+		// Special case for infinite light (stopping by button press), no need to check for stop time or sound
+		if (effectType == CScheduleItem::EF_INFINITE_LIGHT && isLightOn)
+		{
+			CRGBControl::Inst.SetRGBW(RGBW(255, 255, 64, 255));
+			return;
+		}
 
+		// Other effects processing
 		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 
 			&& !isSoundOn && maxSongLength>0)
 		{
