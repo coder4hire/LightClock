@@ -71,7 +71,7 @@ void CScheduler::OnTimeTick()
 
 			// Checking if item is to be executed
 			if (((1 << pParsedFuture->tm_wday) & pItem->DayOfWeekMask)
-				&& futureTimeNoDate >= pItem->ExecTime && futureTimeNoDate <= pItem->ExecTime + prerollTime + 3 &&
+				&& futureTimeNoDate >= pItem->ExecTime && futureTimeNoDate <= pItem->ExecTime + 3 &&
 				(currentEffectScheduleIdx != i || !currectEffect.IsRunning()))
 			{
 				Serial.println("!!! Effect executed !");
@@ -97,9 +97,9 @@ void CScheduler::RunEffectNow(CScheduleItem::EEffectType effect, int maxLength, 
 	currectEffect.Start(item);
 }
 
-void CScheduler::StopEffects()
+void CScheduler::StopEffects(bool stopInfiniteEffects)
 {
-	currectEffect.Stop();
+	currectEffect.Stop(stopInfiniteEffects);
 }
 
 void CScheduler::StoreItemToEEPROM(int index)
@@ -116,4 +116,3 @@ void CScheduler::LoadItemsFromEEPROM()
 {
 	eeprom_read_block(Schedule, (void *)0, SCHEDULE_ITEMS_NUM*sizeof(CScheduleItem));
 }
-

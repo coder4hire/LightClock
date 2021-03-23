@@ -21,7 +21,7 @@ public:
 
 	void OnTimeTick();
 	void RunEffectNow(CScheduleItem::EEffectType effect,int maxLength=600, bool enableRandomMusic=false);
-	void StopEffects();
+	void StopEffects(bool stopInfiniteEffects=true);
 
 	bool IsCurrentEffectRunning() { return currectEffect.IsRunning(); }
 
@@ -32,4 +32,3 @@ protected:
 	void StoreItemToEEPROM(int index);
 	void LoadItemsFromEEPROM();
 };
-

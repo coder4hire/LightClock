@@ -7,6 +7,7 @@
 #include "PlayerCtrl.h"
 
 #define DFPLAYER_RECONNECT_INTERVAL 500
+#define LIGHT_CHECK_INTERVAL 10
 #define TRACE(x) Serial.println(x);
 
 struct CSensorsInfo;
@@ -37,7 +38,8 @@ protected:
 
 	bool CheckButtonStatus();
 	uint8_t prevButtonState;
-	short lastFrontReadings;
+  short readingsIntervalCount;
+  short lastFrontReadings;
 };
 
 struct CSensorsInfo
@@ -45,5 +47,3 @@ struct CSensorsInfo
 	unsigned short FrontLightSensor;
 	unsigned short BackLightSensor;
 };
-
-

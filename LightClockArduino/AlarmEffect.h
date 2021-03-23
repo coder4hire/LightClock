@@ -13,7 +13,7 @@ public:
 
 	bool IsRunning() { return isLightOn || isSoundOn; }
 	void Start(CScheduleItem item);
-	void Stop();
+	void Stop(bool stopInfiniteEffects=true);
 	
 protected:	
 	time_t activationTime;
@@ -30,4 +30,3 @@ protected:
 
 	CScheduleItem::EEffectType effectType;
 };
-

@@ -13,7 +13,7 @@ CMain CMain::Inst;
 #define FRONTLIGHT_SENSOR_PIN A6
 #define BACKLIGHT_SENSOR_PIN A7
 
-#define LIGHTSTOP_JUMP_THRESHOLD 110
+#define LIGHTSTOP_JUMP_THRESHOLD 120
 
 CMain::CMain()
 {
@@ -138,13 +138,17 @@ void CMain::Loop()
 		OnButtonPressed();
 	}
 
-	// Check for front light sensor readings jump
-	short frontReadings = GetFrontSensorReadings();
-	if(CBoardConfig::Inst.IsStopLightEnabled && frontReadings-lastFrontReadings>LIGHTSTOP_JUMP_THRESHOLD)
-	{ 
-		CScheduler::Inst.StopEffects();
-	}
-	lastFrontReadings=frontReadings;
+	// Check for front light sensor readings delta
+  if(!readingsIntervalCount)
+  {
+	  short frontReadings = GetFrontSensorReadings();
+	  if(CBoardConfig::Inst.IsStopLightEnabled && frontReadings-lastFrontReadings>LIGHTSTOP_JUMP_THRESHOLD)
+	  { 
+		  CScheduler::Inst.StopEffects(false);
+	  }
+	  lastFrontReadings=frontReadings;
+  }
+  readingsIntervalCount=(readingsIntervalCount+1)%LIGHT_CHECK_INTERVAL;
 
 	// Check for remote control button pressed
 	IR_ACTIONS actionButton = IRControl::Inst.GetButtonPressed();

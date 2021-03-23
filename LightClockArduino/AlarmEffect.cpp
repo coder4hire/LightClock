@@ -25,13 +25,6 @@ void CAlarmEffect::OnTimeTick()
 	time_t now = CMain::Inst.RTC.now().unixtime();
 	if (activationTime != 0)
 	{
-		// Special case for infinite light (stopping by button press), no need to check for stop time or sound
-		if (effectType == CScheduleItem::EF_INFINITE_LIGHT && isLightOn)
-		{
-			CRGBControl::Inst.SetRGBW(RGBW(255, 255, 64, 255));
-			return;
-		}
-
 		// Other effects processing
 		if (activationTime + prerollTime >= now && activationTime + prerollTime <= now + 3 
 			&& !isSoundOn && maxSongLength>0)
@@ -77,7 +70,25 @@ void CAlarmEffect::OnTimeTick()
 			case CScheduleItem::EF_BLUE:
 				CRGBControl::Inst.SetRGBW(RGBW(0, 0, 255, 0));
 				break;
-
+      case CScheduleItem::EF_INFINITE_LIGHT:
+        {
+          if(now<activationTime+2)
+          {
+            int light = (millis() - activationMillis-20)*255/1200;
+            if(light<0)
+            {
+              light=0;
+            }
+            if(light<255)
+            {
+               CRGBControl::Inst.SetRGBW(RGBW(light, light, 0, light));              
+            }
+          }
+          else
+          {
+            CRGBControl::Inst.SetRGBW(RGBW(255, 255, 0, 255));
+          }
+        }
 			}
 		}
 
@@ -89,7 +100,7 @@ void CAlarmEffect::OnTimeTick()
 
 		if (((now >= activationTime + prerollTime + maxLightLength) ||
 			(CBoardConfig::Inst.DoesBackligthDisableRGB && CMain::Inst.GetBackSensorReadings()>CBoardConfig::Inst.LightThresholdBack))
-			&& isLightOn )
+			&& isLightOn && effectType != CScheduleItem::EF_INFINITE_LIGHT)
 		{
 			isLightOn = false;
 			CRGBControl::Inst.SetRGBW(0);
@@ -122,18 +133,22 @@ void CAlarmEffect::Start(CScheduleItem item)
 	effectType = (CScheduleItem::EEffectType) item.EffectType;
 }
 
-void CAlarmEffect::Stop()
+void CAlarmEffect::Stop(bool stopInfiniteEffects)
 {
-	activationTime = 0;
-	activationMillis = 0;
-	isLightOn = false;
-	isSoundOn = false;
-	CRGBControl::Inst.SetRGBW(0);
+  if(stopInfiniteEffects || effectType != CScheduleItem::EF_INFINITE_LIGHT)
+  {
+	  activationTime = 0;
+  	activationMillis = 0;
+	  isLightOn = false;
+  	isSoundOn = false;
+	  CRGBControl::Inst.SetRGBW(0);
 
-	if (maxSongLength > 0 || isSoundOn)
-	{
-		CMain::Inst.Player.Stop();
-	}
+  	if (maxSongLength > 0 || isSoundOn)
+  	{
+  		CMain::Inst.Player.Stop();
+
+  	}
+  }
 }
 
 void CAlarmEffect::SunriseTimeTick(time_t now)
