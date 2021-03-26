@@ -8,191 +8,204 @@
     tools:context=".ScheduleItemEditor"
     tools:showIn="@layout/activity_schedule_item_editor">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <TimePicker
+            android:id="@+id/timePicker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:theme="@style/NumberPickerStyle"
+            android:timePickerMode="spinner" />
+
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-            <TimePicker
-                android:id="@+id/timePicker"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center" />
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="horizontal"
-                app:layout_constraintTop_toBottomOf="@+id/timePicker">
+                android:orientation="vertical">
 
-                <CheckBox
-                    android:id="@+id/chkMon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mo" />
-
-                <CheckBox
-                    android:id="@+id/chkTue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tu" />
-
-                <CheckBox
-                    android:id="@+id/chkWed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="We" />
-
-                <CheckBox
-                    android:id="@+id/chkThu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Th" />
-
-                <CheckBox
-                    android:id="@+id/chkFri"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Fr" />
-
-                <CheckBox
-                    android:id="@+id/chkSat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sa" />
-
-                <CheckBox
-                    android:id="@+id/chkSun"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Su" />
-
-            </LinearLayout>
-
-            <TableLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="8dp">
-
-                <TableRow
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="?attr/colorControlHighlight">
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:orientation="horizontal"
+                    app:layout_constraintTop_toBottomOf="@+id/timePicker">
 
-                    <TextView
+                    <CheckBox
+                        android:id="@+id/chkMon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Visual Effect: " />
+                        android:text="Mo" />
 
-                </TableRow>
-
-                <TableRow
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
-
-                    <Spinner
-                        android:id="@+id/spinVisualEffect"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="4"
-                        android:theme="@style/ThemeOverlay.MaterialComponents.Dark" />
-
-                    <TextView
-                        android:id="@+id/textView4"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="Len: " />
-
-                    <EditText
-                        android:id="@+id/txtLightLength"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal" />
-                </TableRow>
-
-                <TableRow
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="?attr/colorControlHighlight">>
-
-                    <TextView
+                    <CheckBox
+                        android:id="@+id/chkTue"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Audio Effect: " />
+                        android:text="Tu" />
 
-                </TableRow>
+                    <CheckBox
+                        android:id="@+id/chkWed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="We" />
 
-                <TableRow
+                    <CheckBox
+                        android:id="@+id/chkThu"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Th" />
+
+                    <CheckBox
+                        android:id="@+id/chkFri"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fr" />
+
+                    <CheckBox
+                        android:id="@+id/chkSat"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sa" />
+
+                    <CheckBox
+                        android:id="@+id/chkSun"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Su" />
+
+                </LinearLayout>
+
+                <TableLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content"
+                    android:padding="8dp">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TableRow
+                        android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        android:layout_weight="4">
+                        android:background="?attr/colorControlHighlight">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Visual Effect: " />
+
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_height="match_parent"
+                        android:layout_weight="1">
 
                         <Spinner
-                            android:id="@+id/spinAudioFolder"
+                            android:id="@+id/spinVisualEffect"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
-                            android:layout_weight="2"
-                            android:theme="@style/ThemeOverlay.MaterialComponents.Dark"/>
-                        <EditText
-                            android:id="@+id/txtSong"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginLeft="8dp"
-                            android:layout_weight="1"
-                            android:ems="10"
-                            android:inputType="numberDecimal"
-                            android:text="0" />
-                        <CheckBox
-                            android:id="@+id/chkRnd"
+                            android:layout_weight="4"
+                            android:theme="@style/ThemeOverlay.MaterialComponents.Dark" />
+
+                        <TextView
+                            android:id="@+id/textView4"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="8dp"
                             android:layout_marginRight="8dp"
-                            android:text="RND" />
-                    </LinearLayout>
+                            android:gravity="center_vertical"
+                            android:text="Len: " />
 
-                    <TextView
-                        android:id="@+id/textView3"
-                        android:layout_width="wrap_content"
+                        <EditText
+                            android:id="@+id/txtLightLength"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginRight="8dp"
+                            android:layout_weight="1"
+                            android:ems="10"
+                            android:inputType="numberDecimal" />
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:gravity="center_vertical"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:text="Len: " />
+                        android:background="?attr/colorControlHighlight">>
 
-                    <EditText
-                        android:id="@+id/txtSoundLength"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
-                        android:layout_weight="1"
-                        android:ems="10"
-                        android:inputType="numberDecimal" />
-                </TableRow>
-            </TableLayout>
-        </LinearLayout>
-    </ScrollView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Audio Effect: " />
+
+                    </TableRow>
+
+                    <TableRow
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="4"
+                            android:orientation="horizontal">
+
+                            <Spinner
+                                android:id="@+id/spinAudioFolder"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="2"
+                                android:spinnerMode="dropdown"
+                                android:theme="@style/ThemeOverlay.MaterialComponents.Dark"
+                                />
+
+                            <EditText
+                                android:id="@+id/txtSong"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_marginLeft="8dp"
+                                android:layout_weight="1"
+                                android:ems="10"
+                                android:inputType="numberDecimal"
+                                android:text="0" />
+
+                            <CheckBox
+                                android:id="@+id/chkRnd"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_marginRight="8dp"
+                                android:text="RND" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/textView3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginRight="8dp"
+                            android:gravity="center_vertical"
+                            android:text="Len: " />
+
+                        <EditText
+                            android:id="@+id/txtSoundLength"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginRight="8dp"
+                            android:layout_weight="1"
+                            android:ems="10"
+                            android:inputType="numberDecimal" />
+                    </TableRow>
+                </TableLayout>
+            </LinearLayout>
+        </ScrollView>
+
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
